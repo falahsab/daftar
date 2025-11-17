@@ -38,10 +38,13 @@ if (role !== "admin") {
         <option value="debit">عليه</option>
         <option value="credit">له</option>
     </select>
-    <input type="text" style="display:none" autocomplete="username">
-<input type="password" style="display:none" autocomplete="new-password">
-
-    <input id="note" placeholder="البيان" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+<input id="note" placeholder="البيان"
+       autocomplete="off"
+       autofill="off"
+       data-lpignore="true"
+       autocapitalize="off"
+       spellcheck="false"
+       name="random999">
 
     <button onclick="addTrans()">إضافة العملية</button>
     <p id="msg"></p>
@@ -96,6 +99,7 @@ if (role !== "admin") {
 <script src="js/admin.js"></script>
 </body>
 </html>
+
 
 
 
