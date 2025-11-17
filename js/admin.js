@@ -71,7 +71,11 @@ async function loadTransactions(){
     clientTransactions=data.list;
     let total=data.total;
     document.getElementById("total_info").innerText=`إجمالي الرصيد: ${total>=0?"عليه "+total:"له "+Math.abs(total)} ريال`;
-    renderTransactions(clientTransactions.slice(-3));
+renderTransactions(
+    clientTransactions
+        .sort((a,b)=> new Date(b.date) - new Date(a.date))
+        .slice(0,3)
+);
 }
 function showAllTransactions(){ renderTransactions(clientTransactions); }
 
@@ -109,15 +113,28 @@ async function deleteTransModal(){
 }
 
 function renderTransactions(transactions){
+    // ترتيب العمليات من الأحدث إلى الأقدم
+    transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+
     const table=document.getElementById("transTable");
     table.innerHTML=`<tr><th>ID</th><th>العميل</th><th>المبلغ</th><th>النوع</th><th>البيان</th><th>التاريخ</th></tr>`;
-    const clientName=allClients.find(c=>c.client_id==currentClientId)?.name || "غير معروف";
+    
+    const clientName = allClients.find(c => c.client_id == currentClientId)?.name || "غير معروف";
+
     transactions.forEach(t=>{
-        let row=table.insertRow();
-        row.onclick=()=>openTransModal(t.trans_id);
-        row.innerHTML=`<td>${t.trans_id}</td><td>${clientName}</td><td>${Math.abs(t.amount)}</td><td>${t.type==='debit'?'عليه':'له'}</td><td>${t.note}</td><td>${new Date(t.date).toLocaleDateString()}</td>`;
+        let row = table.insertRow();
+        row.onclick = () => openTransModal(t.trans_id);
+        row.innerHTML = `
+            <td>${t.trans_id}</td>
+            <td>${clientName}</td>
+            <td>${Math.abs(t.amount)}</td>
+            <td>${t.type === 'debit' ? 'عليه' : 'له'}</td>
+            <td>${t.note}</td>
+            <td>${new Date(t.date).toLocaleDateString()}</td>
+        `;
     });
 }
+
 
 // تحميل العملاء عند الفتح
 loadClients();
