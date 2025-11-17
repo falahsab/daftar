@@ -74,7 +74,7 @@ async function loadTransactions(){
 renderTransactions(
     clientTransactions
         .sort((a,b)=> new Date(b.date) - new Date(a.date))
-        .slice(0,3)
+        .slice(0,5)
 );
 }
 function showAllTransactions(){ renderTransactions(clientTransactions); }
