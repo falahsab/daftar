@@ -3,6 +3,7 @@
   "short_name": "دفتر يمن ستلايت",
   "description": "دفتر يمن ستلايت لحسابت العملاء",
   "start_url": "/index.html",
+  "scope": "/",
   "display": "minimal-ui",
   "background_color": "#000000",
   "theme_color": "#6c5ce7",
