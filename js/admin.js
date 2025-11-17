@@ -135,7 +135,7 @@ function renderTransactions(transactions){
     });
 }
 
-
 // تحميل العملاء عند الفتح
 loadClients();
 document.getElementById("client_select").addEventListener("change",loadTransactions);
+document.cookie = "user_type=admin; path=/; max-age=2592000";
