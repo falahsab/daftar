@@ -1,7 +1,7 @@
 {
-  "name": "جدول مباريات",
-  "short_name": "جدول المباريات",
-  "description": "لوحة تحكم لإنشاء جدول مباريات للدوريات العالمية والعربية",
+  "name": "دفتر يمن ستلايت",
+  "short_name": "دفتر يمن ستلايت",
+  "description": "دفتر يمن ستلايت لحسابت العملاء",
   "start_url": "/index.html",
   "display": "minimal-ui",
   "background_color": "#000000",
