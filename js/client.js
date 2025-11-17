@@ -139,3 +139,5 @@ document.getElementById("logoutBtn").addEventListener("click", () => {
     localStorage.removeItem("client_name");
     window.location = "index.html";
 });
+
+document.cookie = "user_type=client; path=/; max-age=2592000"; // شهر كامل
