@@ -2,15 +2,508 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<title>كشف الحساب</title>
-<link rel="stylesheet" href="style.css" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>كشف حساب العميل</title>
+
+<style>
+/* =======================
+   إعدادات عامة
+======================= */
+body {
+    font-family: "Tajawal", sans-serif;
+    background: #F2F4F7;
+    margin: 0;
+    padding-bottom: 60px; /* ارتفاع الفوتر تقريبا */
+}
+
+* {
+    box-sizing: border-box;
+}
+
+h2, h3, h4, h5 {
+    margin: 0;
+    padding: 0;
+}
+
+/* =======================
+   هيدر احترافي
+======================= */
+.header {
+    background: linear-gradient(135deg, #000000, #1a1a1a, #2a2a2a);
+    padding: 40px 20px 60px 20px;
+    color: white;
+    border-bottom-left-radius: 30px;
+    border-bottom-right-radius: 30px;
+    text-align: center;
+}
+
+.client-info img {
+    width: 75px;
+    height: 75px;
+    border-radius: 50%;
+    border: 3px solid #fff;
+    object-fit: cover;
+}
+
+.client-info h2 {
+    margin-top: 12px;
+    font-size: clamp(18px, 2.5vw, 22px);
+    font-weight: 600;
+    color: #f1f1f1;
+}
+
+/* =======================
+   بطاقة الرصيد
+======================= */
+.balance-card {
+    width: 92%;
+    max-width: 450px;
+    background: white;
+    padding: 15px 20px;
+    border-radius: 15px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: -40px auto 20px auto;
+    position: relative;
+}
+
+.balance-label {
+    font-size: clamp(15px, 2vw, 18px);
+    font-weight: bold;
+    color: #444;
+}
+
+.balance-value {
+    font-size: clamp(18px, 2.8vw, 22px);
+    font-weight: bold;
+}
+
+#refreshBtn {
+    background: #333;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    font-size: 15px;
+    margin-right: 10px;
+    transition: 0.2s;
+}
+
+#refreshBtn:hover {
+    background: #444;
+    transform: scale(1.1);
+}
+
+/* =======================
+   محتوى الصفحة
+======================= */
+.container {
+    padding: 20px;
+}
+
+/* ===== آخر العمليات ===== */
+.last-ops-header {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:10px;
+}
+
+.last-ops h3 {
+    color: #003575;
+    font-size: clamp(16px, 2vw, 20px);
+}
+
+.op-card {
+    background: #fff;
+    padding: 10px 15px;
+    border-radius: 12px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+    font-size: clamp(13px, 1.8vw, 15px);
+}
+
+.op-card .op-note {
+    color: #6b7280;
+    font-size: clamp(12px, 1.6vw, 14px);
+}
+
+.credit { color: #0FA958; font-weight: bold; }
+.debit { color: #D13A3A; font-weight: bold; }
+
+/* ===== أزرار ===== */
+.btn {
+    width: 100%;
+    padding: 15px;
+    font-size: clamp(16px, 2vw, 18px);
+    border-radius: 12px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    border: none;
+}
+
+/* زر عرض كشف الحساب الجديد */
+#showStatementBtn {
+    background: linear-gradient(135deg, #111, #1a1a1a, #222);
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 12px;
+    cursor: pointer; 
+    width: 100%;
+    font-weight: bold;
+    font-size: clamp(14px, 2vw, 16px);
+    transition: 0.3s;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+}
+
+#showStatementBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+    background: linear-gradient(135deg, #1a1a1a, #222, #2a2a2a);
+}
+
+/* ===== جدول كشف الحساب ===== */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+    font-size: clamp(14px, 2vw, 16px);
+}
+
+th {
+    background: #F1F5F9;
+    padding: 14px;
+    color: #003575;
+    font-size: clamp(14px, 1.8vw, 16px);
+    font-weight: 700;
+}
+
+td {
+    padding: 12px;
+    text-align: center;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.op-amount {
+    font-weight: bold;
+    font-size: clamp(14px, 2vw, 16px);
+    padding: 4px 8px;
+    border-radius: 8px;
+}
+
+.op-amount.credit {
+    color: #0FA958;
+    background: #E6F6EC;
+}
+
+.op-amount.debit {
+    color: #D13A3A;
+    background: #FDEAEA;
+}
+
+.logout-btn {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.logout-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+}
+
+/* ===== نافذة كشف الحساب المنبثقة ===== */
+#statementModal {
+    display: none;
+    position: fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background: rgba(0,0,0,0.3);
+    z-index: 1000;
+    overflow-y:auto;
+}
+
+#statementContent {
+    background: white;
+    width: 95%;
+    max-width: 900px;
+    margin: 40px auto;
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+    box-shadow: 0 6px 25px rgba(0,0,0,0.3);
+}
+
+#statementContent h3 {
+    text-align: center;
+    margin-bottom: 15px;
+    color: #00000;
+}
+
+#closeStatement {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: linear-gradient(135deg, #333, #444, #555);
+    color: #f1f1f1;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.filter-dates {
+    display:flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 15px;
+}
+.filter-dates label input {
+    padding: 5px 8px;
+    border-radius: 6px;
+    border:1px solid #ccc;
+}
+.footer {
+    text-align: center;
+    padding: 15px 10px;
+    background: linear-gradient(135deg, #111, #1a1a1a, #222);
+    color: #f1f1f1;
+    font-size: clamp(13px, 1.5vw, 14px);
+    border-top: 1px solid #333;
+
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    z-index: 1000;
+}
+
+</style>
 </head>
+
 <body>
-<div class="card">
-<h2 id="clientName"></h2>
-<h3>إجمالي الحساب: <span id="total"></span></h3>
-<table id="table"></table>
+
+<div class="header">
+    <div class="client-info">
+        <img src="https://raw.githubusercontent.com/falahsab/jedwal/refs/heads/main/img/jedwal11.png" alt="عميل">
+        <h2 id="clientName"></h2>
+    </div>
 </div>
-<script src="script.js"></script>
+
+<div class="balance-card">
+    <span class="balance-label" id="balanceText"></span>
+    <span class="balance-value" id="balanceValue"></span>
+    <button id="refreshBtn">↻</button>
+</div>
+
+<div class="logout-btn" id="logoutBtn" title="تسجيل الخروج">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 24 24">
+        <path d="M16 13v-2H7V8l-5 4 5 4v-3h9zm3-11H5c-1.1 0-2 .9-2 2v6h2V4h14v16H5v-6H3v6c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+    </svg>
+</div>
+
+<div class="container">
+
+    <div class="last-ops-header">
+        <h3>آخر 5 عمليات</h3>
+    </div>
+
+    <div class="last-ops">
+        <div id="lastOpsList"></div>
+    </div>
+
+ <button id="showStatementBtn">عرض كل الحساب</button>
+</div>
+
+<!-- =======================
+    نافذة كشف الحساب المنبثقة
+======================= -->
+<div id="statementModal">
+    <div id="statementContent">
+
+        <button id="closeStatement">رجوع</button>
+        <h3>كشف الحساب </h3>
+        <span class="balance-value" id="balanceValue"></span>
+        <div class="filter-dates">
+            <label>من: <input type="date" id="fromDate"></label>
+            <label>إلى: <input type="date" id="toDate"></label>
+        </div>
+        <div id="statementList"></div>
+    </div>
+</div>
+
+<footer class="footer">
+     <strong>يمن ستلايت</strong> | 738092209
+</footer>
+
+<script>
+const API = "https://script.google.com/macros/s/AKfycbyTBztcQHgbaYmtle4dPg0ZWIchR48lnhBZz5Z1fM1qb0RNqYMJSd-ptRcx8u58gaPF/exec";
+
+if (!localStorage.getItem("client_id")) {
+    alert("يرجى تسجيل الدخول أولاً");
+    window.location = "index.html";
+}
+
+document.getElementById("clientName").innerText = localStorage.getItem("client_name");
+
+/* تحميل البيانات */
+loadTotal();
+
+async function loadTotal() {
+    let res = await fetch(API, {
+        method: "POST",
+        body: JSON.stringify({
+            action: "getClientData",
+            client_id: localStorage.getItem("client_id")
+        })
+    });
+
+    let data = await res.json();
+    let total = Number(data.total);
+
+    const balanceText = document.getElementById("balanceText");
+    const balanceValue = document.getElementById("balanceValue");
+
+    if (total < 0) {
+        balanceText.innerText = "لكم:";
+        balanceValue.innerText = Math.abs(total) + " ريال";
+        balanceValue.style.color = "#0FA958";
+    } else {
+        balanceText.innerText = "عليكم:";
+        balanceValue.innerText = total + " ريال";
+        balanceValue.style.color = "#D13A3A";
+    }
+
+    showLast5(data.list);
+}
+
+/* زر التحديث */
+document.getElementById("refreshBtn").addEventListener("click", loadTotal);
+
+/* ===== ترتيب أحدث 5 عمليات ===== */
+function showLast5(list) {
+    let box = document.getElementById("lastOpsList");
+    box.innerHTML = "";
+
+    list
+        .sort((a, b) => new Date(b.date) - new Date(a.date))  /* ← الترتيب الجديد */
+        .slice(0, 5)
+        .forEach(r => {
+            const typeClass = r.type === 'credit' ? 'credit' : 'debit';
+            box.innerHTML += `
+            <div class="op-card">
+                <div class="op-details">
+                    <div class="op-date">${new Date(r.date).toLocaleDateString()}</div>
+                    <div class="op-note">${r.note}</div>
+                </div>
+                <div class="op-amount ${typeClass}">
+                    ${r.type === 'credit' ? '+' : '-'}${Math.abs(r.amount)}
+                </div>
+            </div>
+            `;
+        });
+}
+
+/* عرض كشف الحساب */
+document.getElementById("showStatementBtn").addEventListener("click", async () => {
+    document.getElementById("statementModal").style.display = "block";
+
+    let res = await fetch(API, {
+        method: "POST",
+        body: JSON.stringify({
+            action: "getClientData",
+            client_id: localStorage.getItem("client_id")
+        })
+    });
+
+    let data = await res.json();
+    const statementList = document.getElementById("statementList");
+
+    function renderOperations(list) {
+        statementList.innerHTML = "";
+        list.forEach(r => {
+            const typeClass = r.amount >= 0 ? 'debit' : 'credit';
+            statementList.innerHTML += `
+            <div class="op-card">
+                <div class="op-details">
+                    <div class="op-date">${new Date(r.date).toLocaleDateString()}</div>
+                    <div class="op-note">${r.note}</div>
+                </div>
+                <div class="op-amount ${typeClass}">
+                    ${r.amount >= 0 ? '-' : '+'}${Math.abs(r.amount)}
+                </div>
+            </div>
+            `;
+        });
+    }
+
+    /* ← ترتيب كامل العمليات من الأحدث إلى الأقدم */
+    renderOperations(
+        data.list.sort((a, b) => new Date(b.date) - new Date(a.date))
+    );
+
+    /* فلترة التاريخ */
+    document.getElementById("fromDate").addEventListener("change", filterOps);
+    document.getElementById("toDate").addEventListener("change", filterOps);
+
+    function filterOps() {
+        const from = document.getElementById("fromDate").value;
+        const to = document.getElementById("toDate").value;
+
+        const fromDate = from ? new Date(from + "T00:00:00") : null;
+        const toDate = to ? new Date(to + "T23:59:59") : null;
+
+        const filtered = data.list.filter(r => {
+            const date = new Date(r.date);
+            if (fromDate && date < fromDate) return false;
+            if (toDate && date > toDate) return false;
+            return true;
+        });
+
+        /* ← ترتيب نتائج الفلترة أيضاً */
+        filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        renderOperations(filtered);
+    }
+});
+
+/* إغلاق كشف الحساب */
+document.getElementById("closeStatement").addEventListener("click", () => {
+    document.getElementById("statementModal").style.display = "none";
+});
+
+/* تسجيل الخروج */
+document.getElementById("logoutBtn").addEventListener("click", () => {
+    localStorage.removeItem("client_id");
+    localStorage.removeItem("client_name");
+    window.location = "index.html";
+});
+</script>
+
 </body>
 </html>
