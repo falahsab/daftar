@@ -41,19 +41,24 @@
 <script src="js/script.js"></script>
 <script>
 window.onload = function () {
-  const role = localStorage.getItem("role");
+    const logged = localStorage.getItem("isLoggedIn");
+    const role = localStorage.getItem("userRole");
 
-  if (role === "admin") {
-    window.location.href = "admin.html";
-  } else if (role === "client") {
-    window.location.href = "client.html";
-  }
+    if (logged === "true") {
+        if (role === "client") {
+            location.href = "client.html";
+        } else if (role === "admin") {
+            location.href = "admin.html";
+        }
+    }
 };
+
 </script>
 
 
 </body>
 </html>
+
 
 
 
