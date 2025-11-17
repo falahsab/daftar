@@ -80,7 +80,8 @@ if (role !== "admin") {
         <option value="debit">عليه</option>
         <option value="credit">له</option>
     </select>
-    <input id="modal_note" placeholder="البيان"autocomplete="off">
+    <input id="modal_note" placeholder="البيان" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false">
+
     <div style="display:flex; gap:10px; margin-top:10px;">
         <button onclick="saveTransModal()">حفظ</button>
         <button onclick="deleteTransModal()" style="background:#EF4444">حذف</button>
@@ -92,4 +93,5 @@ if (role !== "admin") {
 <script src="js/admin.js"></script>
 </body>
 </html>
+
 
