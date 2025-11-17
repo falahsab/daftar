@@ -9,11 +9,6 @@ function showAddClientModal(){ document.getElementById("addClientModal").style.d
 function closeAddClientModal(){ document.getElementById("addClientModal").style.display="none"; }
 
 // البحث في العملاء
-document.getElementById("search_client").addEventListener("input",function(){
-    const term=this.value.toLowerCase();
-    const options=document.getElementById("client_select").options;
-    for(let i=0;i<options.length;i++){ options[i].style.display = options[i].text.toLowerCase().includes(term)?"":"none"; }
-});
 
 // جلب العملاء
 let allClients=[];
