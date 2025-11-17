@@ -1,97 +1,87 @@
-const API = "https://script.google.com/macros/s/AKfycbwalL1AfqLL2B3gOyrjz_FAKywJG7rbKdpT7wNQ8DEvinGT23VXPATS4CwcGjOhuFb9/exec";
+// رابط السكربت الصحيح الذي يدعم العملاء والأدمن
+const API = "https://script.google.com/macros/s/AKfycbyqo_4LRAisFoN_QrUO6nTRez1o9AgvxCFLQJzxV3DbyKczaJN0EtAXwuDMXwUMlp5c/exec";
 
+async function login() {
+    let username = document.getElementById("username").value.trim();
+    let password = document.getElementById("password").value.trim();
+    let msg = document.getElementById("msg");
 
-let res = await fetch(API, {
-method: "POST",
-body: JSON.stringify({
-action: "login",
-username,
-password
-})
+    msg.innerText = "";
+
+    if (username === "" || password === "") {
+        msg.innerText = "يرجى تعبئة جميع الحقول";
+        return;
+    }
+
+    try {
+        let res = await fetch(API, {
+            method: "POST",
+            body: JSON.stringify({
+                action: "login",
+                username,
+                password
+            })
+        });
+
+        let data = await res.json();
+
+        if (data.status !== "success") {
+            msg.innerText = data.message || "خطأ في اسم المستخدم أو كلمة المرور";
+            return;
+        }
+
+        // حفظ بيانات العميل أو الانتقال للأدمن
+        if (data.role === "client") {
+            localStorage.setItem("client_id", data.client_id);
+            localStorage.setItem("client_name", data.name);
+            window.location = "client.html";
+        } else if (data.role === "admin") {
+            localStorage.setItem("role", "admin");
+            window.location = "admin.html";
+        }
+
+    } catch (err) {
+        msg.innerText = "خطأ في الاتصال بالسيرفر";
+        console.error(err);
+    }
+}
+     // تحديد مدة الجلسه
+    document.addEventListener("click", () => {
+    const expire = localStorage.getItem("session_expire");
+    if (expire && Date.now() < Number(expire)) {
+        // تمديد الجلسة تلقائياً
+        const sessionDuration = 30 * 60 * 1000; // 30 دقيقة
+        localStorage.setItem("session_expire", Date.now() + sessionDuration);
+    }
 });
-
-
-let data = await res.json();
-
-
-if (!data.success) {
-document.getElementById("msg").innerText = "خطأ في تسجيل الدخول";
-return;
+// تسجيل Service Worker
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/sw.js")
+    .then(() => console.log("Service Worker Registered"))
+    .catch((err) => console.error("SW registration failed:", err));
 }
 
+// زر تثبيت التطبيق
+let deferredPrompt;
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
 
-localStorage.setItem("client_id", data.client_id);
-localStorage.setItem("client_name", data.name);
+  const installBtn = document.createElement("button");
+  installBtn.textContent = "ثبت التطبيق على جهازك";
+  installBtn.className = "btn";
+  installBtn.style.position = "fixed";
+  installBtn.style.bottom = "10px";
+  installBtn.style.left = "50%";
+  installBtn.style.transform = "translateX(-50%)";
+  installBtn.style.zIndex = "10000";
+  document.body.appendChild(installBtn);
 
-
-window.location = "client.html";
-}
-
-
-// صفحة العميل
-if (location.pathname.includes("client.html")) loadClient();
-
-
-async function loadClient() {
-document.getElementById("clientName").innerText = localStorage.getItem("client_name");
-
-
-let res = await fetch(API, {
-method: "POST",
-body: JSON.stringify({
-action: "getClientData",
-client_id: localStorage.getItem("client_id")
-})
+  installBtn.addEventListener("click", async () => {
+    installBtn.remove();
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log(outcome === "accepted" ? "تم التثبيت" : "تم رفض التثبيت");
+    deferredPrompt = null;
+  });
 });
-
-
-let data = await res.json();
-
-
-document.getElementById("total").innerText = data.total + " ريال";
-
-
-let html = `
-<tr><th>التاريخ</th><th>النوع</th><th>المبلغ</th><th>البيان</th></tr>
-`;
-
-
-data.list.forEach(r => {
-html += `<tr>
-<td>${new Date(r.date).toLocaleDateString()}</td>
-<td>${r.type === 'in' ? 'له' : 'عليه'}</td>
-<td>${r.amount}</td>
-<td>${r.note}</td>
-</tr>`;
-});
-
-
-document.getElementById("table").innerHTML = html;
-}
-
-
-// لوحة التحكم
-async function addTrans() {
-let client_id = document.getElementById("client_id").value;
-let amount = document.getElementById("amount").value;
-let type = document.getElementById("type").value;
-let note = document.getElementById("note").value;
-
-
-let res = await fetch(API, {
-method: "POST",
-body: JSON.stringify({
-action: "addTransaction",
-client_id,
-amount,
-type,
-note
-})
-});
-
-
-let data = await res.json();
-
-
-document.getElementById("msg").innerText = data.success ? "تمت الإضافة" : "فشل الإضافة";
-}
