@@ -23,13 +23,12 @@ if (role !== "admin") {
 <div class="card">
     <h2>للوحة تحكم الإدمن | يمن ستلايت</h2>
     <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
-
+    <button onclick="showAddClientModal()">إضافة عميل جديد</button>
     <h3>إضافة عملية مالية</h3>
-    <input type="text" id="search_client" placeholder="ابحث عن العميل...">
+    
     <select id="client_select">
         <option value="">اختر العميل</option>
     </select>
-    <button onclick="showAddClientModal()">إضافة عميل جديد</button>
 
     <input id="amount" type="number" placeholder="المبلغ">
     <select id="type">
@@ -100,6 +99,7 @@ if (role !== "admin") {
 <script src="js/admin.js"></script>
 </body>
 </html>
+
 
 
 
