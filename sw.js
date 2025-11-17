@@ -3,7 +3,7 @@ const urlsToCache = [
   "/",
   "/index.html",
   "/css/style.css",
-  "/js/min.js",
+  "/js/script.js",
   "https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap",
   "https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css",
   "https://code.jquery.com/jquery-3.6.0.min.js",
