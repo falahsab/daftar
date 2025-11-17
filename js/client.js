@@ -1,97 +1,141 @@
-const API = "https://script.google.com/macros/s/AKfycbwalL1AfqLL2B3gOyrjz_FAKywJG7rbKdpT7wNQ8DEvinGT23VXPATS4CwcGjOhuFb9/exec";
+const API = "https://script.google.com/macros/s/AKfycbyTBztcQHgbaYmtle4dPg0ZWIchR48lnhBZz5Z1fM1qb0RNqYMJSd-ptRcx8u58gaPF/exec";
 
-
-let res = await fetch(API, {
-method: "POST",
-body: JSON.stringify({
-action: "login",
-username,
-password
-})
-});
-
-
-let data = await res.json();
-
-
-if (!data.success) {
-document.getElementById("msg").innerText = "خطأ في تسجيل الدخول";
-return;
+if (!localStorage.getItem("client_id")) {
+    alert("يرجى تسجيل الدخول أولاً");
+    window.location = "index.html";
 }
 
-
-localStorage.setItem("client_id", data.client_id);
-localStorage.setItem("client_name", data.name);
-
-
-window.location = "client.html";
-}
-
-
-// صفحة العميل
-if (location.pathname.includes("client.html")) loadClient();
-
-
-async function loadClient() {
 document.getElementById("clientName").innerText = localStorage.getItem("client_name");
 
+/* تحميل البيانات */
+loadTotal();
 
-let res = await fetch(API, {
-method: "POST",
-body: JSON.stringify({
-action: "getClientData",
-client_id: localStorage.getItem("client_id")
-})
-});
+async function loadTotal() {
+    let res = await fetch(API, {
+        method: "POST",
+        body: JSON.stringify({
+            action: "getClientData",
+            client_id: localStorage.getItem("client_id")
+        })
+    });
 
+    let data = await res.json();
+    let total = Number(data.total);
 
-let data = await res.json();
+    const balanceText = document.getElementById("balanceText");
+    const balanceValue = document.getElementById("balanceValue");
 
+    if (total < 0) {
+        balanceText.innerText = "لكم:";
+        balanceValue.innerText = Math.abs(total) + " ريال";
+        balanceValue.style.color = "#0FA958";
+    } else {
+        balanceText.innerText = "عليكم:";
+        balanceValue.innerText = total + " ريال";
+        balanceValue.style.color = "#D13A3A";
+    }
 
-document.getElementById("total").innerText = data.total + " ريال";
-
-
-let html = `
-<tr><th>التاريخ</th><th>النوع</th><th>المبلغ</th><th>البيان</th></tr>
-`;
-
-
-data.list.forEach(r => {
-html += `<tr>
-<td>${new Date(r.date).toLocaleDateString()}</td>
-<td>${r.type === 'in' ? 'له' : 'عليه'}</td>
-<td>${r.amount}</td>
-<td>${r.note}</td>
-</tr>`;
-});
-
-
-document.getElementById("table").innerHTML = html;
+    showLast5(data.list);
 }
 
+/* زر التحديث */
+document.getElementById("refreshBtn").addEventListener("click", loadTotal);
 
-// لوحة التحكم
-async function addTrans() {
-let client_id = document.getElementById("client_id").value;
-let amount = document.getElementById("amount").value;
-let type = document.getElementById("type").value;
-let note = document.getElementById("note").value;
+/* ===== ترتيب أحدث 5 عمليات ===== */
+function showLast5(list) {
+    let box = document.getElementById("lastOpsList");
+    box.innerHTML = "";
 
+    list
+        .sort((a, b) => new Date(b.date) - new Date(a.date))  /* ← الترتيب الجديد */
+        .slice(0, 5)
+        .forEach(r => {
+            const typeClass = r.type === 'credit' ? 'credit' : 'debit';
+            box.innerHTML += `
+            <div class="op-card">
+                <div class="op-details">
+                    <div class="op-date">${new Date(r.date).toLocaleDateString()}</div>
+                    <div class="op-note">${r.note}</div>
+                </div>
+                <div class="op-amount ${typeClass}">
+                    ${r.type === 'credit' ? '+' : '-'}${Math.abs(r.amount)}
+                </div>
+            </div>
+            `;
+        });
+}
 
-let res = await fetch(API, {
-method: "POST",
-body: JSON.stringify({
-action: "addTransaction",
-client_id,
-amount,
-type,
-note
-})
+/* عرض كشف الحساب */
+document.getElementById("showStatementBtn").addEventListener("click", async () => {
+    document.getElementById("statementModal").style.display = "block";
+
+    let res = await fetch(API, {
+        method: "POST",
+        body: JSON.stringify({
+            action: "getClientData",
+            client_id: localStorage.getItem("client_id")
+        })
+    });
+
+    let data = await res.json();
+    const statementList = document.getElementById("statementList");
+
+    function renderOperations(list) {
+        statementList.innerHTML = "";
+        list.forEach(r => {
+            const typeClass = r.amount >= 0 ? 'debit' : 'credit';
+            statementList.innerHTML += `
+            <div class="op-card">
+                <div class="op-details">
+                    <div class="op-date">${new Date(r.date).toLocaleDateString()}</div>
+                    <div class="op-note">${r.note}</div>
+                </div>
+                <div class="op-amount ${typeClass}">
+                    ${r.amount >= 0 ? '-' : '+'}${Math.abs(r.amount)}
+                </div>
+            </div>
+            `;
+        });
+    }
+
+    /* ← ترتيب كامل العمليات من الأحدث إلى الأقدم */
+    renderOperations(
+        data.list.sort((a, b) => new Date(b.date) - new Date(a.date))
+    );
+
+    /* فلترة التاريخ */
+    document.getElementById("fromDate").addEventListener("change", filterOps);
+    document.getElementById("toDate").addEventListener("change", filterOps);
+
+    function filterOps() {
+        const from = document.getElementById("fromDate").value;
+        const to = document.getElementById("toDate").value;
+
+        const fromDate = from ? new Date(from + "T00:00:00") : null;
+        const toDate = to ? new Date(to + "T23:59:59") : null;
+
+        const filtered = data.list.filter(r => {
+            const date = new Date(r.date);
+            if (fromDate && date < fromDate) return false;
+            if (toDate && date > toDate) return false;
+            return true;
+        });
+
+        /* ← ترتيب نتائج الفلترة أيضاً */
+        filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        renderOperations(filtered);
+    }
 });
 
+/* إغلاق كشف الحساب */
+document.getElementById("closeStatement").addEventListener("click", () => {
+    document.getElementById("statementModal").style.display = "none";
+});
 
-let data = await res.json();
-
-
-document.getElementById("msg").innerText = data.success ? "تمت الإضافة" : "فشل الإضافة";
-}
+/* تسجيل الخروج */
+document.getElementById("logoutBtn").addEventListener("click", () => {
+    localStorage.removeItem("client_id");
+    localStorage.removeItem("client_name");
+    window.location = "index.html";
+});
