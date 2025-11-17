@@ -1,43 +1,57 @@
-// رابط السكربت الصحيح الذي يدعم العملاء والأدمن
+// رابط API
 const API = "https://script.google.com/macros/s/AKfycbyqo_4LRAisFoN_QrUO6nTRez1o9AgvxCFLQJzxV3DbyKczaJN0EtAXwuDMXwUMlp5c/exec";
 
-async function login() {
-    let username = document.getElementById("username").value.trim();
-    let password = document.getElementById("password").value.trim();
-    let msg = document.getElementById("msg");
+// فحص الجلسة عند تحميل الصفحة
+document.addEventListener("DOMContentLoaded", () => {
+    const sessionExpire = localStorage.getItem("session_expire");
+    const role = localStorage.getItem("role");
+    
+    if (sessionExpire && Date.now() < Number(sessionExpire)) {
+        // إعادة التوجيه حسب الدور
+        if (role === "admin") window.location.href = "admin.html";
+        else if (localStorage.getItem("client_id")) window.location.href = "client.html";
+    } else {
+        // انتهاء الجلسة
+        localStorage.clear();
+    }
+});
 
+// تسجيل الدخول
+async function login() {
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value.trim();
+    const msg = document.getElementById("msg");
     msg.innerText = "";
 
-    if (username === "" || password === "") {
+    if (!username || !password) {
         msg.innerText = "يرجى تعبئة جميع الحقول";
         return;
     }
 
     try {
-        let res = await fetch(API, {
+        const res = await fetch(API, {
             method: "POST",
-            body: JSON.stringify({
-                action: "login",
-                username,
-                password
-            })
+            body: JSON.stringify({ action: "login", username, password })
         });
 
-        let data = await res.json();
+        const data = await res.json();
 
         if (data.status !== "success") {
             msg.innerText = data.message || "خطأ في اسم المستخدم أو كلمة المرور";
             return;
         }
 
-        // حفظ بيانات العميل أو الانتقال للأدمن
+        // مدة الجلسة 30 دقيقة
+        const sessionDuration = 30 * 60 * 1000;
+        localStorage.setItem("session_expire", Date.now() + sessionDuration);
+
         if (data.role === "client") {
             localStorage.setItem("client_id", data.client_id);
             localStorage.setItem("client_name", data.name);
-            window.location = "client.html";
+            window.location.href = "client.html";
         } else if (data.role === "admin") {
             localStorage.setItem("role", "admin");
-            window.location = "admin.html";
+            window.location.href = "admin.html";
         }
 
     } catch (err) {
@@ -45,69 +59,12 @@ async function login() {
         console.error(err);
     }
 }
-     // تحديد مدة الجلسه
-    document.addEventListener("click", () => {
+
+// تمديد الجلسة عند أي تفاعل
+document.addEventListener("click", () => {
     const expire = localStorage.getItem("session_expire");
     if (expire && Date.now() < Number(expire)) {
-        // تمديد الجلسة تلقائياً
-        const sessionDuration = 30 * 60 * 1000; // 30 دقيقة
+        const sessionDuration = 30 * 60 * 1000;
         localStorage.setItem("session_expire", Date.now() + sessionDuration);
     }
 });
-// تسجيل Service Worker
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("/sw.js")
-    .then(() => console.log("Service Worker Registered"))
-    .catch((err) => console.error("SW registration failed:", err));
-}
-
-// زر تثبيت التطبيق
-let deferredPrompt;
-window.addEventListener("beforeinstallprompt", (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-
-  const installBtn = document.createElement("button");
-  installBtn.textContent = "ثبت التطبيق على جهازك";
-  installBtn.className = "btn";
-  installBtn.style.position = "fixed";
-  installBtn.style.bottom = "10px";
-  installBtn.style.left = "50%";
-  installBtn.style.transform = "translateX(-50%)";
-  installBtn.style.zIndex = "10000";
-  document.body.appendChild(installBtn);
-
-  installBtn.addEventListener("click", async () => {
-    installBtn.remove();
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    console.log(outcome === "accepted" ? "تم التثبيت" : "تم رفض التثبيت");
-    deferredPrompt = null;
-  });
-});
-function login() {
-  const username = document.getElementById("username").value;
-  const password = document.getElementById("password").value;
-
-  // مثال للتحقق
-  if (username === "admin" && password === "123") {
-    localStorage.setItem("role", "admin");
-    window.location.href = "admin.html";
-  } else {
-    localStorage.setItem("role", "client");
-    window.location.href = "client.html";
-  }
-}
-
-window.onload = function () {
-    const logged = localStorage.getItem("isLoggedIn");
-    const role = localStorage.getItem("userRole");
-
-    if (logged === "true") {
-        if (role === "client") {
-            location.href = "client.html";
-        } else if (role === "admin") {
-            location.href = "admin.html";
-        }
-    }
-};
