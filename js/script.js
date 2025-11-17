@@ -85,3 +85,16 @@ window.addEventListener("beforeinstallprompt", (e) => {
     deferredPrompt = null;
   });
 });
+function login() {
+  const username = document.getElementById("username").value;
+  const password = document.getElementById("password").value;
+
+  // مثال للتحقق
+  if (username === "admin" && password === "123") {
+    localStorage.setItem("role", "admin");
+    window.location.href = "admin.html";
+  } else {
+    localStorage.setItem("role", "client");
+    window.location.href = "client.html";
+  }
+}
