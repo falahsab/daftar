@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>لوحة التحكم</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div class="card">
+<h2>إضافة عملية مالية</h2>
+
+
+<input id="client_id" placeholder="ID العميل">
+<input id="amount" type="number" placeholder="المبلغ">
+
+
+<select id="type">
+<option value="in">له</option>
+<option value="out">عليه</option>
+</select>
+
+
+<input id="note" placeholder="البيان">
+
+
+<button onclick="addTrans()">إضافة</button>
+<p id="msg"></p>
+</div>
+
+
+<script src="script.js"></script>
+</body>
+</html>
