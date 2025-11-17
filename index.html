@@ -18,6 +18,18 @@
 <!-- =======================  CSS  ======================= -->
 <link rel="stylesheet" href="css/style.css">
 </head>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const user = localStorage.getItem("user_type"); // client | admin | null
+
+    if (user === "client") {
+        window.location.href = "client.html";
+    } 
+    else if (user === "admin") {
+        window.location.href = "admin.html";
+    }
+});
+</script>
 
 <body>
 
@@ -38,3 +50,4 @@
 <script src="js/script.js"></script>
 </body>
 </html>
+
