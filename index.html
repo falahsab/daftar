@@ -48,6 +48,15 @@ document.addEventListener("DOMContentLoaded", () => {
 </div>
 <!-- سكربت الرئيسي -->
 <script src="js/script.js"></script>
+ <script>
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js')
+    .then(reg => console.log("Service Worker Registered", reg))
+    .catch(err => console.error("SW Registration Failed", err));
+}
+</script>
+
 </body>
 </html>
+
 
