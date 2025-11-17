@@ -2,32 +2,92 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<title>لوحة التحكم</title>
-<link rel="stylesheet" href="style.css" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة تحكم الإدمن | يمن ستلايت</title>
+
+<link rel="stylesheet" href="css/admin.css">
 </head>
+
 <body>
+    
+
+<script>
+// تحقق من أن المستخدم أدمن
+const role = localStorage.getItem("role"); // أو يمكنك تخزين "admin" عند تسجيل الدخول
+if (role !== "admin") {
+    alert("يجب تسجيل الدخول كأدمن للوصول إلى هذه الصفحة");
+    window.location.href = "index.html"; // إعادة توجيه لصفحة الدخول
+}
+</script>
+
 <div class="card">
-<h2>إضافة عملية مالية</h2>
 
+<div class="card">
+    <h2>لوحة تحكم الإدمن | بنك الراجحي</h2>
+    <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
 
-<input id="client_id" placeholder="ID العميل">
-<input id="amount" type="number" placeholder="المبلغ">
+    <h3>إضافة عملية مالية</h3>
+    <input type="text" id="search_client" placeholder="ابحث عن العميل...">
+    <select id="client_select">
+        <option value="">اختر العميل</option>
+    </select>
+    <button onclick="showAddClientModal()">إضافة عميل جديد</button>
 
+    <input id="amount" type="number" placeholder="المبلغ">
+    <select id="type">
+        <option value="debit">عليه</option>
+        <option value="credit">له</option>
+    </select>
+    <input id="note" placeholder="البيان">
+    <button onclick="addTrans()">إضافة العملية</button>
+    <p id="msg"></p>
 
-<select id="type">
-<option value="in">له</option>
-<option value="out">عليه</option>
-</select>
+    <h3>آخر 3 عمليات للعميل</h3>
+    <p id="total_info"></p>
+    <button onclick="showAllTransactions()">عرض كل العمليات</button>
 
-
-<input id="note" placeholder="البيان">
-
-
-<button onclick="addTrans()">إضافة</button>
-<p id="msg"></p>
+    <div class="table-container">
+        <table id="transTable">
+            <tr>
+                <th>ID</th><th>العميل</th><th>المبلغ</th><th>النوع</th><th>البيان</th><th>التاريخ</th>
+            </tr>
+        </table>
+    </div>
 </div>
 
+<!-- نافذة إضافة عميل -->
+<div id="addClientModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeAddClientModal()">&times;</span>
+    <h3>إضافة عميل جديد</h3>
+    <input id="new_name" placeholder="الاسم">
+    <input id="new_mobile"type="number" placeholder="رقم الجوال">
+    <input id="new_username" placeholder="اسم المستخدم">
+    <input id="new_password" type="password" placeholder="كلمة المرور">
+    <button onclick="addClient()">إضافة العميل</button>
+    <p id="clientMsg"></p>
+  </div>
+</div>
 
-<script src="script.js"></script>
+<!-- نافذة تعديل/حذف العملية -->
+<div id="transModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeTransModal()">&times;</span>
+    <h3>تعديل العملية</h3>
+    <input id="modal_amount" type="number" placeholder="المبلغ">
+    <select id="modal_type">
+        <option value="debit">عليه</option>
+        <option value="credit">له</option>
+    </select>
+    <input id="modal_note" placeholder="البيان"autocomplete="off">
+    <div style="display:flex; gap:10px; margin-top:10px;">
+        <button onclick="saveTransModal()">حفظ</button>
+        <button onclick="deleteTransModal()" style="background:#EF4444">حذف</button>
+        <button onclick="closeTransModal()" style="background:#888">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/admin.js"></script>
 </body>
 </html>
