@@ -38,6 +38,9 @@ if (role !== "admin") {
         <option value="debit">عليه</option>
         <option value="credit">له</option>
     </select>
+    <input type="text" style="display:none" autocomplete="username">
+<input type="password" style="display:none" autocomplete="new-password">
+
     <input id="note" placeholder="البيان" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
 
     <button onclick="addTrans()">إضافة العملية</button>
@@ -93,5 +96,6 @@ if (role !== "admin") {
 <script src="js/admin.js"></script>
 </body>
 </html>
+
 
 
