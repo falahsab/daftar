@@ -98,3 +98,16 @@ function login() {
     window.location.href = "client.html";
   }
 }
+
+window.onload = function () {
+    const logged = localStorage.getItem("isLoggedIn");
+    const role = localStorage.getItem("userRole");
+
+    if (logged === "true") {
+        if (role === "client") {
+            location.href = "client.html";
+        } else if (role === "admin") {
+            location.href = "admin.html";
+        }
+    }
+};
