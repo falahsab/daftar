@@ -27,46 +27,14 @@
     <img src="img/yemen-sat.png" alt="يمن ستلايت" class="logo">
 
     <h2>دفتر يمن ستلايت</h2>
-
 <form id="loginForm" onsubmit="login(); return false;">
     <input id="username" name="username" placeholder="اسم المستخدم" autocomplete="username">
     <input id="password" name="password" type="password" placeholder="كلمة المرور" autocomplete="current-password">
     <button type="submit">دخول</button>
 </form>
-
-
     <p id="msg"></p>
 </div>
 <!-- سكربت الرئيسي -->
 <script src="js/script.js"></script>
-<script>
-window.onload = function () {
-    const logged = localStorage.getItem("isLoggedIn");
-    const role = localStorage.getItem("userRole");
-
-    if (logged === "true") {
-        if (role === "client") {
-            location.href = "client.html";
-        } else if (role === "admin") {
-            location.href = "admin.html";
-        }
-    }
-};
-
-</script>
-
-
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
