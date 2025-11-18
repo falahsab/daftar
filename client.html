@@ -1,222 +1,71 @@
-const API="https://script.google.com/macros/s/AKfycbyTBztcQHgbaYmtle4dPg0ZWIchR48lnhBZz5Z1fM1qb0RNqYMJSd-ptRcx8u58gaPF/exec";
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>كشف حساب العميل</title>
 
-if(!localStorage.getItem("client_id")){
-    alert("يرجى تسجيل الدخول أولاً");
-    window.location="index.html";
-}
+<link rel="stylesheet" href="css/client.css">
+</head>
 
-document.getElementById("clientName").innerText=localStorage.getItem("client_name");
+<body>
 
-loadTotal();
+<div class="header">
+    <div class="client-info">
+        <img src="https://raw.githubusercontent.com/falahsab/jedwal/refs/heads/main/img/jedwal11.png" alt="عميل">
+        <h2 id="clientName"></h2>
+    </div>
+</div>
 
-async function loadTotal(){
-    let res=await fetch(API,{
-        method:"POST",
-        body:JSON.stringify({
-            action:"getClientData",
-            client_id:localStorage.getItem("client_id")
-        })
-    });
-    let data=await res.json();
-    let total=Number(data.total);
+<div class="balance-card">
+    <span class="balance-label" id="balanceText"></span>
+    <span class="balance-value" id="balanceValue"></span>
+    <button id="refreshBtn">↻</button>
+</div>
 
-    const balanceText=document.getElementById("balanceText");
-    const balanceValue=document.getElementById("balanceValue");
-    const modalBalanceValue=document.getElementById("modalBalanceValue");
+<div class="logout-btn" id="logoutBtn" title="تسجيل الخروج">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 24 24">
+        <path d="M16 13v-2H7V8l-5 4 5 4v-3h9zm3-11H5c-1.1 0-2 .9-2 2v6h2V4h14v16H5v-6H3v6c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+    </svg>
+</div>
 
-    if(total < 0){
-        balanceText.innerText="لكم:";
-        balanceValue.innerText=Math.abs(total)+" ريال";
-        modalBalanceValue.innerText = "لكم: " + Math.abs(total) + " ريال";
-        balanceValue.style.color="#0FA958";
-        modalBalanceValue.style.color="#0FA958";
-    } else {
-        balanceText.innerText="عليكم:";
-        balanceValue.innerText=total+" ريال";
-        modalBalanceValue.innerText = "عليكم: " + total + " ريال";
-        balanceValue.style.color="#D13A3A";
-        modalBalanceValue.style.color="#D13A3A";
-    }
+<div class="container">
 
-    showLast5(data.list);
-}
+    <div class="last-ops-header">
+        <h3>آخر 5 عمليات</h3>
+    </div>
 
-document.getElementById("refreshBtn").addEventListener("click",loadTotal);
+    <div class="last-ops">
+        <div id="lastOpsList"></div>
+    </div>
 
-function showLast5(list){
-    let box=document.getElementById("lastOpsList");
-    box.innerHTML="";
-    list.sort((a,b)=>new Date(b.date)-new Date(a.date))
-    .slice(0,5)
-    .forEach(r=>{
-        const typeClass = r.amount < 0 ? "credit" : "debit";
-        box.innerHTML+=`
-        <div class="op-card">
-            <div class="op-details">
-                <div class="op-date">${new Date(r.date).toLocaleDateString()}</div>
-                <div class="op-note">${r.note}</div>
-            </div>
-            <div class="op-amount ${typeClass}">
-                ${r.amount < 0 ? '+' : '-'}${Math.abs(r.amount)}
-            </div>
-        </div>`;
-    });
-    document.getElementById("showStatementBtn").style.display = "block";
-}
+ <button id="showStatementBtn">عرض كل الحساب</button>
+</div>
 
-/* OPEN STATEMENT */
-document.getElementById("showStatementBtn").addEventListener("click",async()=>{
-    document.getElementById("statementModal").style.display="block";
+<!-- =======================
+    نافذة كشف الحساب المنبثقة
+======================= -->
+<div id="statementModal">
+    <div id="statementContent">
 
-    let res=await fetch(API,{
-        method:"POST",
-        body:JSON.stringify({
-            action:"getClientData",
-            client_id:localStorage.getItem("client_id")
-        })
-    });
+        <button id="closeStatement">رجوع</button>
+        <h3>كشف الحساب </h3>
+        <span class="balance-value" id="balanceValue"></span>
+        <div class="filter-dates">
+            <label>من: <input type="date" id="fromDate"></label>
+            <label>إلى: <input type="date" id="toDate"></label>
+        </div>
+        <div id="statementList"></div>
+    </div>
+</div>
 
-    let data=await res.json();
-    const statementList=document.getElementById("statementList");
+<footer class="footer">
+     <strong>يمن ستلايت</strong> | 738092209
+</footer>
 
-    // اسم العميل في المودال
-    document.getElementById("printClientName").innerText = "اسم العميل: " + (localStorage.getItem("client_name") || "غير معروف");
+<script src="js/client.js"></script>
 
-    function calcTotals(list){
-        let totalCredit = 0;
-        let totalDebit = 0;
-        list.forEach(r => {
-            if (r.amount < 0) totalCredit += Math.abs(r.amount);
-            else totalDebit += r.amount;
-        });
+</body>
+</html>
 
-        let net = totalDebit - totalCredit;
-        let netText = "";
-        let netColor = "";
 
-        if (net < 0) {
-            netText = "الصافي: لكم " + Math.abs(net) + " ريال";
-            netColor = "#0FA958";
-        } else if (net > 0) {
-            netText = "الصافي: عليكم " + net + " ريال";
-            netColor = "#D13A3A";
-        } else {
-            netText = "الصافي: لا يوجد (0 ريال)";
-            netColor = "#333";
-        }
-
-        document.getElementById("totalsBox").innerHTML = `
-            <div style="text-align:center;">
-                <div>إجمالي لكم: <strong style="color:#0FA958">${totalCredit} ريال</strong></div>
-                <div>إجمالي عليكم: <strong style="color:#D13A3A">${totalDebit} ريال</strong></div>
-                <div style="
-                    margin-top:12px;
-                    font-size:18px;
-                    font-weight:bold;
-                    color:${netColor};
-                    padding:8px 0;
-                ">
-                    ${netText}
-                </div>
-            </div>
-        `;
-    }
-
-    function renderOperations(list){
-        statementList.innerHTML="";
-        list.forEach(r=>{
-            const typeClass=r.amount < 0 ? "credit" : "debit";
-            statementList.innerHTML+=`
-            <div class="op-card">
-                <div class="op-details">
-                    <div class="op-date">${new Date(r.date).toLocaleDateString()}</div>
-                    <div class="op-note">${r.note}</div>
-                </div>
-                <div class="op-amount ${typeClass}">
-                    ${r.amount < 0 ? '+' : '-'}${Math.abs(r.amount)}
-                </div>
-            </div>`;
-        });
-    }
-
-    const sorted=data.list.sort((a,b)=>new Date(b.date)-new Date(a.date));
-    renderOperations(sorted);
-    calcTotals(sorted);
-
-    document.getElementById("fromDate").onchange=filterOps;
-    document.getElementById("toDate").onchange=filterOps;
-
-    function filterOps(){
-        const from=document.getElementById("fromDate").value;
-        const to=document.getElementById("toDate").value;
-
-        const fromDate=from ? new Date(from+"T00:00:00") : null;
-        const toDate=to ? new Date(to+"T23:59:59") : null;
-
-        const filtered=data.list.filter(r=>{
-            const d=new Date(r.date);
-            if(fromDate && d<fromDate) return false;
-            if(toDate && d>toDate) return false;
-            return true;
-        });
-
-        filtered.sort((a,b)=>new Date(b.date)-new Date(a.date));
-        renderOperations(filtered);
-        calcTotals(filtered);
-    }
-});
-
-/* PRINT */
-document.getElementById("printStatement").addEventListener("click",()=>{
-    window.print();
-});
-
-/* EXPORT EXCEL */
-document.getElementById("exportExcel").addEventListener("click", () => {
-    let clientName = document.getElementById("clientName").innerText || "اسم العميل غير معروف";
-
-    let rows = [
-        ["اسم العميل:", clientName],
-        [],
-        ["التاريخ", "البيان", "المبلغ"]
-    ];
-
-    document.querySelectorAll("#statementList .op-card").forEach(card => {
-        let date = card.querySelector(".op-date").innerText;
-        let note = card.querySelector(".op-note").innerText;
-        let safeNote = `="${note.replace(/"/g, '""')}"`;
-        let amount = `="${card.querySelector(".op-amount").innerText.replace(/'/g, "")}"`;
-
-        rows.push([date, safeNote, amount]);
-    });
-
-    let csvContent = "\uFEFF" + rows.map(e => e.join(",")).join("\n");
-
-    let blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    let url = URL.createObjectURL(blob);
-
-    let a = document.createElement("a");
-    a.href = url;
-    a.download = "كشف الحساب.csv";
-    a.click();
-});
-
-/* CLOSE MODAL */
-document.getElementById("closeStatement").addEventListener("click",()=>{
-    document.getElementById("statementModal").style.display="none";
-});
-
-/* LOGOUT */
-document.getElementById("logoutBtn").addEventListener("click",()=>{
-    localStorage.removeItem("client_id");
-    localStorage.removeItem("client_name");
-    window.location="index.html";
-});
-
-/* TO TOP BUTTON */
-const toTop=document.getElementById("toTop");
-window.onscroll=()=>{
-    if(window.scrollY>300) toTop.style.display="flex";
-    else toTop.style.display="none";
-};
-toTop.onclick=()=>window.scrollTo({top:0,behavior:"smooth"});
