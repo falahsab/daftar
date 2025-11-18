@@ -10,9 +10,10 @@
 
 <body>
 
+
 <div class="header">
     <div class="client-info">
-        <img src="https://raw.githubusercontent.com/falahsab/jedwal/refs/heads/main/img/jedwal11.png" alt="عميل">
+        <img src="https://raw.githubusercontent.com/falahsab/jedwal/refs/heads/main/img/jedwal11.png">
         <h2 id="clientName"></h2>
     </div>
 </div>
@@ -23,41 +24,42 @@
     <button id="refreshBtn">↻</button>
 </div>
 
-<div class="logout-btn" id="logoutBtn" title="تسجيل الخروج">
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 24 24">
-        <path d="M16 13v-2H7V8l-5 4 5 4v-3h9zm3-11H5c-1.1 0-2 .9-2 2v6h2V4h14v16H5v-6H3v6c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
-    </svg>
+<div class="logout-btn" id="logoutBtn">
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white"><path d="M16 13v-2H7V8l-5 4 5 4v-3h9zm3-11H5c-1.1 0-2 .9-2 2v6h2V4h14v16H5v-6H3v6c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
 </div>
 
 <div class="container">
-
     <div class="last-ops-header">
         <h3>آخر 5 عمليات</h3>
     </div>
-
     <div class="last-ops">
         <div id="lastOpsList"></div>
     </div>
-
- <button id="showStatementBtn">عرض كل الحساب</button>
+   <button id="showStatementBtn" style="display:none;">عرض كل الحساب</button>
 </div>
 
-<!-- =======================
-    نافذة كشف الحساب المنبثقة
-======================= -->
 <div id="statementModal">
     <div id="statementContent">
-
         <button id="closeStatement">رجوع</button>
-        <h3>كشف الحساب </h3>
-        <span class="balance-value" id="balanceValue"></span>
+        <h3>كشف الحساب</h3>
+        <p id="printClientName"></p>
+        <span class="balance-value" id="modalBalanceValue"></span>
+
         <div class="filter-dates">
             <label>من: <input type="date" id="fromDate"></label>
             <label>إلى: <input type="date" id="toDate"></label>
         </div>
+
+        <div id="totalsBox"></div>
+
+        <button id="printStatement" class="btn" style="background:#222;color:white;">طباعة PDF</button>
+        <button id="exportExcel" class="btn" style="background:#444;color:white;">تصدير Excel</button>
+
         <div id="statementList"></div>
     </div>
 </div>
+
+<div id="toTop">↑</div>
 
 <footer class="footer">
      <strong>يمن ستلايت</strong> | 738092209
@@ -67,5 +69,6 @@
 
 </body>
 </html>
+
 
 
