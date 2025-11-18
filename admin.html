@@ -9,57 +9,46 @@
 </head>
 
 <body>
-    
 
 <script>
-// تحقق من أن المستخدم أدمن
-const role = localStorage.getItem("role"); // أو يمكنك تخزين "admin" عند تسجيل الدخول
-if (role !== "admin") {
-    alert("يجب تسجيل الدخول كأدمن للوصول إلى هذه الصفحة");
-    window.location.href = "index.html"; // إعادة توجيه لصفحة الدخول
-}
+// تحقق من صلاحية الأدمن
+const role = localStorage.getItem("role");
+if(role !== "admin") { alert("يجب تسجيل الدخول كأدمن"); window.location.href="index.html"; }
 </script>
 
 <div class="card">
-    <h2>للوحة تحكم الإدمن | يمن ستلايت</h2>
-    <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
-    <button onclick="showAddClientModal()">إضافة عميل جديد</button>
-    <h3>إضافة عملية مالية</h3>
-   
-    <select id="client_select">
-        <option value="">اختر العميل</option>
-    </select>
+<h2>لوحة تحكم الإدمن | بنك الراجحي</h2>
+<button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
 
-    <input id="amount" type="number" placeholder="المبلغ">
-    <select id="type">
-        <option value="debit">عليه</option>
-        <option value="credit">له</option>
-    </select>
-<input type="text" style="display:none" autocomplete="username">
-<input type="password" style="display:none" autocomplete="new-password">
+<h3>إضافة عملية مالية</h3>
 
-<input id="note" name="field987" placeholder="البيان"
-       autocomplete="off"
-       autofill="off"
-       data-lpignore="true"
-       autocapitalize="off"
-       spellcheck="false">
+<select id="client_select">
+    <option value="">اختر العميل</option>
+</select>
+<button type="button" onclick="showAddClientModal()">إضافة عميل جديد</button>
 
+<input id="amount" type="number" placeholder="المبلغ">
+<select id="type">
+    <option value="debit">عليه</option>
+    <option value="credit">له</option>
+</select>
+<input id="note" placeholder="البيان">
+<button type="button" onclick="addTrans()">إضافة العملية</button>
+<p id="msg"></p>
+<p id="loading"></p>
 
-    <button onclick="addTrans()">إضافة العملية</button>
-    <p id="msg"></p>
+<h3>آخر 3 عمليات للعميل</h3>
+<p id="total_info"></p>
+<button type="button" onclick="showAllTransactions()">عرض كل العمليات</button>
 
-    <h3>آخر 3 عمليات للعميل</h3>
-    <p id="total_info"></p>
-    <button onclick="showAllTransactions()">عرض كل العمليات</button>
+<!-- زر جديد لعرض جميع العملاء وصافي حساباتهم -->
+<button type="button" onclick="showClientsBalances()" style="background:#0b74de;">عرض جميع العملاء وصافي حساباتهم</button>
 
-    <div class="table-container">
-        <table id="transTable">
-            <tr>
-                <th>ID</th><th>العميل</th><th>المبلغ</th><th>النوع</th><th>البيان</th><th>التاريخ</th>
-            </tr>
-        </table>
-    </div>
+<div class="table-container">
+    <table id="transTable">
+        <tr><th>ID</th><th>العميل</th><th>المبلغ</th><th>النوع</th><th>البيان</th><th>التاريخ</th></tr>
+    </table>
+</div>
 </div>
 
 <!-- نافذة إضافة عميل -->
@@ -71,7 +60,7 @@ if (role !== "admin") {
     <input id="new_mobile"type="number" placeholder="رقم الجوال">
     <input id="new_username" placeholder="اسم المستخدم">
     <input id="new_password" type="password" placeholder="كلمة المرور">
-    <button onclick="addClient()">إضافة العميل</button>
+    <button type="button" onclick="addClient()">إضافة العميل</button>
     <p id="clientMsg"></p>
   </div>
 </div>
@@ -86,19 +75,46 @@ if (role !== "admin") {
         <option value="debit">عليه</option>
         <option value="credit">له</option>
     </select>
-    <input id="modal_note" placeholder="البيان" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false">
-
+    <input id="modal_note" placeholder="البيان" autocomplete="off">
     <div style="display:flex; gap:10px; margin-top:10px;">
-        <button onclick="saveTransModal()">حفظ</button>
-        <button onclick="deleteTransModal()" style="background:#EF4444">حذف</button>
-        <button onclick="closeTransModal()" style="background:#888">إلغاء</button>
+        <button type="button" onclick="saveTransModal()">حفظ</button>
+        <button type="button" onclick="deleteTransModal()" style="background:#EF4444">حذف</button>
+        <button type="button" onclick="closeTransModal()" style="background:#888">إلغاء</button>
     </div>
   </div>
+</div>
 
+<!-- مودال عرض العملاء وصافي الحسابات -->
+<div id="clientsModal">
+  <div class="modal-body">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h3 style="margin:0;">قائمة العملاء وصافي الحساب</h3>
+      <button class="close-btn" onclick="closeClientsModal()">إغلاق</button>
+    </div>
 
+    <div style="margin-top:12px;">
+      <input id="search_client" placeholder="ابحث بالاسم أو رقم الجوال" oninput="filterClientsTable()" />
+    </div>
+
+    <div style="overflow:auto; margin-top:10px;">
+      <table id="clientsBalanceTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>العميل</th>
+            <th>رقم الجوال</th>
+            <th>صافي الحساب</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
 <script src="js/admin.js"></script>
 </body>
 </html>
+
 
 
 
