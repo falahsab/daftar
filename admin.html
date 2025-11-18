@@ -33,7 +33,15 @@ if(role !== "admin") { alert("يجب تسجيل الدخول كأدمن"); windo
     <option value="debit">عليه</option>
     <option value="credit">له</option>
 </select>
-<input id="note" placeholder="البيان">
+<input type="text" style="display:none" autocomplete="username">
+<input type="password" style="display:none" autocomplete="new-password">
+
+<input id="note" name="field987" placeholder="البيان"
+       autocomplete="off"
+       autofill="off"
+       data-lpignore="true"
+       autocapitalize="off"
+       spellcheck="false">
 <button type="button" onclick="addTrans()">إضافة العملية</button>
 <p id="msg"></p>
 <p id="loading"></p>
@@ -115,3 +123,4 @@ if(role !== "admin") { alert("يجب تسجيل الدخول كأدمن"); windo
 <script src="js/admin.js"></script>
 </body>
 </html>
+
