@@ -1,80 +1,75 @@
-// API الخاص بك
-const API = "https://script.google.com/macros/s/AKfycbzoGjNE5FYkiU8Jt2nMsv9Mpekk8W82ND717dX5oPuyFNWRjM54TmnnEMt-VW-PboXF/exec";
+const API = "https://script.google.com/macros/s/AKfycbyVpJCk3vbby4L9Pl3U2UwRz8S_NeD3kwpLWqGcDHOkxR2xj2A2S3KG94mXHHoRWuKi/exec";
 
-// تسجيل الخروج
 function logout(){ localStorage.clear(); window.location.href="index.html"; }
 
-// نافذة إضافة عميل
 function showAddClientModal(){ document.getElementById("addClientModal").style.display="block"; }
 function closeAddClientModal(){ document.getElementById("addClientModal").style.display="none"; }
+function closeTransModal(){ document.getElementById("transModal").style.display="none"; currentTransId=null; }
 
-// البحث في العملاء
 
-// جلب العملاء
-let allClients=[];
+
+let allClients = [];
 async function loadClients(){
-    const res = await fetch(API,{ method:"POST", body: JSON.stringify({action:"getClients"})});
+    document.getElementById("loading").textContent = "جاري تحميل العملاء...";
+    const res = await fetch(API, { method:"POST", body: JSON.stringify({action:"getClients"})});
     const data = await res.json();
     allClients = data;
     const select = document.getElementById("client_select");
-    select.innerHTML=`<option value="">اختر العميل</option>`;
+    select.innerHTML = `<option value="">اختر العميل</option>`;
     data.forEach(c=>{
-        let opt=document.createElement("option");
-        opt.value=c.client_id; opt.textContent=`${c.name} (${c.mobile})`;
+        let opt = document.createElement("option");
+        opt.value = c.client_id;
+        opt.textContent = `${c.name} (${c.mobile})`;
         select.appendChild(opt);
     });
+    document.getElementById("loading").textContent = "";
 }
 
-// إضافة عميل
 async function addClient(){
-    const name=document.getElementById("new_name").value.trim();
-    const mobile=document.getElementById("new_mobile").value.trim();
-    const username=document.getElementById("new_username").value.trim();
-    const password=document.getElementById("new_password").value.trim();
-    const msg=document.getElementById("clientMsg");
-    if(!name||!mobile||!username||!password){ msg.innerText="يرجى تعبئة كل الحقول"; msg.style.color="red"; return; }
-    const res=await fetch(API,{ method:"POST", body: JSON.stringify({action:"addClient",name,mobile,username,password}) });
-    const data=await res.json();
-    if(data.status==="success"){ msg.innerText="تمت الإضافة بنجاح"; msg.style.color="green"; closeAddClientModal(); loadClients(); }
-    else{ msg.innerText="حدث خطأ أثناء الإضافة"; msg.style.color="red"; }
+    const name = document.getElementById("new_name").value.trim();
+    const mobile = document.getElementById("new_mobile").value.trim();
+    const username = document.getElementById("new_username").value.trim();
+    const password = document.getElementById("new_password").value.trim();
+    const msg = document.getElementById("clientMsg");
+    if(!name || !mobile || !username || !password){ msg.textContent="يرجى تعبئة كل الحقول"; msg.style.color="red"; return; }
+    const res = await fetch(API, { method:"POST", body: JSON.stringify({action:"addClient",name,mobile,username,password})});
+    const data = await res.json();
+    if(data.status==="success"){ msg.textContent="تمت الإضافة بنجاح"; msg.style.color="green"; closeAddClientModal(); loadClients(); }
+    else{ msg.textContent="حدث خطأ أثناء الإضافة"; msg.style.color="red"; }
 }
 
-// إضافة عملية مالية
 async function addTrans(){
-    const client_id=document.getElementById("client_select").value;
-    let amount=Number(document.getElementById("amount").value);
-    const type=document.getElementById("type").value;
-    const note=document.getElementById("note").value;
-    const msg=document.getElementById("msg");
-    if(!client_id||!amount||!note){ msg.innerText="يرجى تعبئة كل الحقول"; msg.style.color="red"; return; }
-    if(type==="credit") amount=-Math.abs(amount); else amount=Math.abs(amount);
-
-    const res=await fetch(API,{ method:"POST", body: JSON.stringify({action:"addTransaction",client_id,amount,type,note}) });
-    const data=await res.json();
-    if(data.status==="success"){ msg.innerText="تمت الإضافة بنجاح"; msg.style.color="green"; document.getElementById("amount").value=""; document.getElementById("note").value=""; loadTransactions(); }
-    else{ msg.innerText="حدث خطأ أثناء الإضافة"; msg.style.color="red"; }
+    const client_id = document.getElementById("client_select").value;
+    let amount = Number(document.getElementById("amount").value);
+    const type = document.getElementById("type").value;
+    const note = document.getElementById("note").value;
+    const msg = document.getElementById("msg");
+    if(!client_id || !amount || !note){ msg.textContent="يرجى تعبئة كل الحقول"; msg.style.color="red"; return; }
+    amount = type==="credit" ? -Math.abs(amount) : Math.abs(amount);
+    const res = await fetch(API,{ method:"POST", body: JSON.stringify({action:"addTransaction",client_id,amount,type,note})});
+    const data = await res.json();
+    if(data.status==="success"){ msg.textContent="تمت الإضافة بنجاح"; msg.style.color="green"; document.getElementById("amount").value=""; document.getElementById("note").value=""; loadTransactions(); }
+    else{ msg.textContent="حدث خطأ أثناء الإضافة"; msg.style.color="red"; }
 }
 
-// تحميل العمليات
-let currentClientId=""; let clientTransactions=[];
+let currentClientId=""; let clientTransactions=[]; let currentTransId=null;
+
 async function loadTransactions(){
     currentClientId=document.getElementById("client_select").value;
     if(!currentClientId) return;
-    const res=await fetch(API,{ method:"POST", body: JSON.stringify({action:"getClientData", client_id: currentClientId}) });
-    const data=await res.json();
+    document.getElementById("loading").textContent = "جاري تحميل العمليات...";
+    const res = await fetch(API,{ method:"POST", body: JSON.stringify({action:"getClientData", client_id: currentClientId}) });
+    const data = await res.json();
+    document.getElementById("loading").textContent = "";
     if(data.status!=="success") return;
-    clientTransactions=data.list;
-    let total=data.total;
-    document.getElementById("total_info").innerText=`إجمالي الرصيد: ${total>=0?"عليه "+total:"له "+Math.abs(total)} ريال`;
-renderTransactions(
-    clientTransactions
-        .sort((a,b)=> new Date(b.date) - new Date(a.date))
-        .slice(0,5)
-);
+    clientTransactions = data.list.sort((a,b)=>new Date(b.date)-new Date(a.date));
+    const total = data.total;
+    document.getElementById("total_info").textContent = `إجمالي الرصيد: ${total>=0?"عليه "+total:"له "+Math.abs(total)} ريال`;
+    renderTransactions(clientTransactions.slice(0,3));
 }
+
 function showAllTransactions(){ renderTransactions(clientTransactions); }
 
-let currentTransId=null;
 function openTransModal(trans_id){
     currentTransId=trans_id;
     const t=clientTransactions.find(tr=>tr.trans_id==trans_id);
@@ -84,14 +79,14 @@ function openTransModal(trans_id){
     document.getElementById("modal_note").value=t.note;
     document.getElementById("transModal").style.display="block";
 }
-function closeTransModal(){ document.getElementById("transModal").style.display="none"; currentTransId=null; }
 
 async function saveTransModal(){
     if(!currentTransId) return;
     let amount=Number(document.getElementById("modal_amount").value);
     const type=document.getElementById("modal_type").value;
     const note=document.getElementById("modal_note").value;
-    if(type==="credit") amount=-Math.abs(amount); else amount=Math.abs(amount);
+    if(!amount||!note){ alert("يرجى تعبئة كل الحقول"); return; }
+    amount = type==="credit" ? -Math.abs(amount) : Math.abs(amount);
     const res=await fetch(API,{ method:"POST", body: JSON.stringify({ action:"updateTransaction", trans_id:currentTransId, amount, type, note }) });
     const data=await res.json();
     if(data.success||data.status==="success"){ alert("تم الحفظ بنجاح"); closeTransModal(); loadTransactions(); }
@@ -108,29 +103,112 @@ async function deleteTransModal(){
 }
 
 function renderTransactions(transactions){
-    // ترتيب العمليات من الأحدث إلى الأقدم
-    transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
-
     const table=document.getElementById("transTable");
-    table.innerHTML=`<tr><th>ID</th><th>العميل</th><th>المبلغ</th><th>النوع</th><th>البيان</th><th>التاريخ</th></tr>`;
-    
-    const clientName = allClients.find(c => c.client_id == currentClientId)?.name || "غير معروف";
+    table.innerHTML='';
+    const header = ["ID","العميل","المبلغ","النوع","البيان","التاريخ"];
+    const trHeader = document.createElement("tr");
+    header.forEach(h=>{ const th = document.createElement("th"); th.textContent=h; trHeader.appendChild(th); });
+    table.appendChild(trHeader);
 
+    const clientName = allClients.find(c=>c.client_id==currentClientId)?.name || "غير معروف";
     transactions.forEach(t=>{
-        let row = table.insertRow();
-        row.onclick = () => openTransModal(t.trans_id);
-        row.innerHTML = `
-            <td>${t.trans_id}</td>
-            <td>${clientName}</td>
-            <td>${Math.abs(t.amount)}</td>
-            <td>${t.type === 'debit' ? 'عليه' : 'له'}</td>
-            <td>${t.note}</td>
-            <td>${new Date(t.date).toLocaleDateString()}</td>
-        `;
+        const row = table.insertRow();
+        row.onclick = ()=>openTransModal(t.trans_id);
+        const cells = [
+            t.trans_id,
+            clientName,
+            Math.abs(t.amount),
+            t.type==='debit'?'عليه':'له',
+            t.note,
+            new Date(t.date).toLocaleDateString()
+        ];
+        cells.forEach((c,i)=>{
+            const cell = row.insertCell();
+            cell.textContent = c;
+            if(i===2){ cell.className = t.type==='debit'?'debit':'credit'; }
+        });
     });
 }
 
-// تحميل العملاء عند الفتح
 loadClients();
 document.getElementById("client_select").addEventListener("change",loadTransactions);
-document.cookie = "user_type=admin; path=/; max-age=2592000";
+
+// إغلاق النوافذ عند الضغط خارجها
+window.onclick = function(event){
+    const addModal = document.getElementById("addClientModal");
+    const transModal = document.getElementById("transModal");
+    if(event.target===addModal) addModal.style.display="none";
+    if(event.target===transModal) transModal.style.display="none";
+};
+
+// ===================== إضافات: جلب وعرض صافي حسابات العملاء =====================
+
+// جلب صافي الحسابات وعرضها في مودال
+async function showClientsBalances() {
+    document.getElementById("loading").textContent = "جاري تحميل أرصدة العملاء...";
+    try {
+        const res = await fetch(API, { method: "POST", body: JSON.stringify({ action: "getClientsBalance" }) });
+        const data = await res.json();
+        document.getElementById("loading").textContent = "";
+
+        if (!Array.isArray(data)) {
+            alert("حدث خطأ أثناء جلب البيانات");
+            return;
+        }
+
+        // تعبئة الجدول
+        const tbody = document.querySelector("#clientsBalanceTable tbody");
+        tbody.innerHTML = "";
+        data.forEach(c => {
+            const tr = document.createElement("tr");
+            const idTd = document.createElement("td");
+            idTd.textContent = c.client_id;
+            const nameTd = document.createElement("td");
+            nameTd.textContent = c.name;
+            const mobileTd = document.createElement("td");
+            mobileTd.textContent = c.mobile;
+            const totalTd = document.createElement("td");
+            const totalVal = Number(c.total);
+            totalTd.textContent = totalVal >= 0 ? `عليه ${totalVal}` : `له ${Math.abs(totalVal)}`;
+            totalTd.style.fontWeight = "bold";
+            totalTd.style.color = totalVal >= 0 ? "red" : "green";
+
+            tr.appendChild(idTd);
+            tr.appendChild(nameTd);
+            tr.appendChild(mobileTd);
+            tr.appendChild(totalTd);
+            tbody.appendChild(tr);
+        });
+
+        // فتح المودال
+        openClientsModal();
+    } catch (err) {
+        document.getElementById("loading").textContent = "";
+        alert("فشل جلب أرصدة العملاء");
+        console.error(err);
+    }
+}
+
+function openClientsModal() {
+    const m = document.getElementById("clientsModal");
+    m.style.display = "flex";
+    m.style.alignItems = "center";
+}
+
+function closeClientsModal() {
+    document.getElementById("clientsModal").style.display = "none";
+}
+
+// فلترة بسيطة لجدول العملاء
+function filterClientsTable() {
+    const q = document.getElementById("search_client").value.trim().toLowerCase();
+    const rows = document.querySelectorAll("#clientsBalanceTable tbody tr");
+    rows.forEach(r => {
+        const name = r.children[1].textContent.toLowerCase();
+        const mobile = r.children[2].textContent.toLowerCase();
+        if (name.includes(q) || mobile.includes(q) || q === "") r.style.display = "";
+        else r.style.display = "none";
+    });
+}
+
+// ==============================================================================
