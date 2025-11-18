@@ -6,9 +6,8 @@ function showAddClientModal(){ document.getElementById("addClientModal").style.d
 function closeAddClientModal(){ document.getElementById("addClientModal").style.display="none"; }
 function closeTransModal(){ document.getElementById("transModal").style.display="none"; currentTransId=null; }
 
-
-
 let allClients = [];
+
 async function loadClients(){
     document.getElementById("loading").textContent = "جاري تحميل العملاء...";
     const res = await fetch(API, { method:"POST", body: JSON.stringify({action:"getClients"})});
@@ -31,12 +30,27 @@ async function addClient(){
     const username = document.getElementById("new_username").value.trim();
     const password = document.getElementById("new_password").value.trim();
     const msg = document.getElementById("clientMsg");
-    if(!name || !mobile || !username || !password){ msg.textContent="يرجى تعبئة كل الحقول"; msg.style.color="red"; return; }
+    if(!name || !mobile || !username || !password){ 
+        msg.textContent="يرجى تعبئة كل الحقول"; 
+        msg.style.color="red"; 
+        return; 
+    }
     const res = await fetch(API, { method:"POST", body: JSON.stringify({action:"addClient",name,mobile,username,password})});
     const data = await res.json();
-    if(data.status==="success"){ msg.textContent="تمت الإضافة بنجاح"; msg.style.color="green"; closeAddClientModal(); loadClients(); }
-    else{ msg.textContent="حدث خطأ أثناء الإضافة"; msg.style.color="red"; }
-}
+
+    if(data.status==="success"){ 
+        msg.textContent="تمت الإضافة بنجاح"; 
+        msg.style.color="green"; 
+        closeAddClientModal(); 
+        loadClients();
+
+        // اختفاء الرسالة بعد 3 ثواني
+        setTimeout(() => { msg.textContent = ""; }, 3000);
+    } else { 
+        msg.textContent="حدث خطأ أثناء الإضافة"; 
+        msg.style.color="red"; 
+    }
+} // نهاية addClient
 
 async function addTrans(){
     const client_id = document.getElementById("client_select").value;
@@ -44,12 +58,28 @@ async function addTrans(){
     const type = document.getElementById("type").value;
     const note = document.getElementById("note").value;
     const msg = document.getElementById("msg");
-    if(!client_id || !amount || !note){ msg.textContent="يرجى تعبئة كل الحقول"; msg.style.color="red"; return; }
+    if(!client_id || !amount || !note){ 
+        msg.textContent="يرجى تعبئة كل الحقول"; 
+        msg.style.color="red"; 
+        return; 
+    }
     amount = type==="credit" ? -Math.abs(amount) : Math.abs(amount);
     const res = await fetch(API,{ method:"POST", body: JSON.stringify({action:"addTransaction",client_id,amount,type,note})});
     const data = await res.json();
-    if(data.status==="success"){ msg.textContent="تمت الإضافة بنجاح"; msg.style.color="green"; document.getElementById("amount").value=""; document.getElementById("note").value=""; loadTransactions(); }
-    else{ msg.textContent="حدث خطأ أثناء الإضافة"; msg.style.color="red"; }
+
+    if(data.status==="success"){ 
+        msg.textContent = "تمت الإضافة بنجاح"; 
+        msg.style.color = "green"; 
+        document.getElementById("amount").value=""; 
+        document.getElementById("note").value=""; 
+        loadTransactions();
+
+        // اختفاء الرسالة بعد 3 ثواني
+        setTimeout(() => { msg.textContent = ""; }, 3000);
+    } else { 
+        msg.textContent="حدث خطأ أثناء الإضافة"; 
+        msg.style.color="red"; 
+    }
 }
 
 let currentClientId=""; let clientTransactions=[]; let currentTransId=null;
@@ -103,17 +133,20 @@ async function deleteTransModal(){
 }
 
 function renderTransactions(transactions){
-    const table=document.getElementById("transTable");
-    table.innerHTML='';
-    const header = ["ID","العميل","المبلغ","النوع","البيان","التاريخ"];
+    const table = document.getElementById("transTable");
+    table.innerHTML = '';
+    const header = ["ID","العميل","المبلغ","النوع","البيان","التاريخ","واتساب"];
     const trHeader = document.createElement("tr");
-    header.forEach(h=>{ const th = document.createElement("th"); th.textContent=h; trHeader.appendChild(th); });
+    header.forEach(h => { const th = document.createElement("th"); th.textContent = h; trHeader.appendChild(th); });
     table.appendChild(trHeader);
 
-    const clientName = allClients.find(c=>c.client_id==currentClientId)?.name || "غير معروف";
-    transactions.forEach(t=>{
+    const clientName = allClients.find(c => c.client_id == currentClientId)?.name || "غير معروف";
+    const clientMobile = allClients.find(c => c.client_id == currentClientId)?.mobile || "";
+
+    transactions.forEach(t => {
         const row = table.insertRow();
-        row.onclick = ()=>openTransModal(t.trans_id);
+        row.onclick = () => openTransModal(t.trans_id);
+
         const cells = [
             t.trans_id,
             clientName,
@@ -122,13 +155,47 @@ function renderTransactions(transactions){
             t.note,
             new Date(t.date).toLocaleDateString()
         ];
-        cells.forEach((c,i)=>{
+
+        cells.forEach((c,i) => {
             const cell = row.insertCell();
             cell.textContent = c;
             if(i===2){ cell.className = t.type==='debit'?'debit':'credit'; }
         });
+
+        // زر واتساب مع رسالة احترافية + ايموجي
+        const waCell = row.insertCell();
+        const waBtn = document.createElement("button");
+        waBtn.textContent = "واتساب";
+        waBtn.style.background="#25D366";
+        waBtn.style.color="#fff";
+        waBtn.style.border="none";
+        waBtn.style.padding="6px 12px";
+        waBtn.style.borderRadius="6px";
+        waBtn.style.cursor="pointer";
+
+        waBtn.onclick = (e) => {
+            e.stopPropagation();
+            const total = clientTransactions.reduce((sum,tr) => sum + Number(tr.amount), 0);
+            const typeText = t.type==='debit' ? 'عليكم' : 'لكم';
+            const totalText = total >= 0 ? `عليكم ${total}` : `لكم ${Math.abs(total)}`;
+const msg = `\u{1F464} العميل: ${clientName}
+\u{1F4B0} قيد ${typeText} مبلغ: ${Math.abs(t.amount)} ريال
+\u{1F4DD} البيان: ${t.note}
+---------------
+\u{1F4CA} صافي حسابك:
+    ${totalText} ريال
+
+\u{2B50} #يمن-ستلايت`;
+
+            const url = `https://wa.me/${clientMobile}?text=${encodeURIComponent(msg)}`;
+            window.open(url, "_blank");
+        };
+
+        waCell.appendChild(waBtn);
     });
 }
+
+
 
 loadClients();
 document.getElementById("client_select").addEventListener("change",loadTransactions);
