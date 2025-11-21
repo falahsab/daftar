@@ -178,7 +178,7 @@ function renderTransactions(transactions){
             const total = clientTransactions.reduce((sum,tr) => sum + Number(tr.amount), 0);
             const typeText = t.type==='debit' ? 'عليكم' : 'لكم';
             const totalText = total >= 0 ? `عليكم ${total}` : `لكم ${Math.abs(total)}`;
-const msg = `\u{1F464} العميل: ${clientName}
+const msg = `\u{1F464} الاخ: ${clientName}
 \u{1F4B0} قيد ${typeText} مبلغ: ${Math.abs(t.amount)} ريال
 \u{1F4DD} البيان: ${t.note}
 ---------------
