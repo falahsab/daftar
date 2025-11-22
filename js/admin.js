@@ -1,281 +1,379 @@
 const API = "https://script.google.com/macros/s/AKfycbyVpJCk3vbby4L9Pl3U2UwRz8S_NeD3kwpLWqGcDHOkxR2xj2A2S3KG94mXHHoRWuKi/exec";
+const waIcon = "https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg";
 
+const qs = id => document.getElementById(id);
+let allClients=[], clientTransactions=[], currentClientId="", currentTransId=null;
+
+// مودالات
+function openModal(id){ qs(id).style.display="flex"; }
+function closeModal(id){ qs(id).style.display="none"; }
+window.onclick = e=>{ if(e.target.classList.contains("modal")) e.target.style.display="none"; }
+
+// تسجيل خروج
 function logout(){ localStorage.clear(); window.location.href="index.html"; }
 
-function showAddClientModal(){ document.getElementById("addClientModal").style.display="block"; }
-function closeAddClientModal(){ document.getElementById("addClientModal").style.display="none"; }
-function closeTransModal(){ document.getElementById("transModal").style.display="none"; currentTransId=null; }
-
-let allClients = [];
-
+// تحميل العملاء
 async function loadClients(){
-    document.getElementById("loading").textContent = "جاري تحميل العملاء...";
-    const res = await fetch(API, { method:"POST", body: JSON.stringify({action:"getClients"})});
-    const data = await res.json();
-    allClients = data;
-    const select = document.getElementById("client_select");
-    select.innerHTML = `<option value="">اختر العميل</option>`;
+    qs("loading").textContent="جاري تحميل العملاء...";
+    const res=await fetch(API,{method:"POST",body:JSON.stringify({action:"getClients"})});
+    const data=await res.json();
+    allClients=data;
+    const select=qs("client_select"); select.innerHTML=`<option value="">اختر العميل</option>`;
     data.forEach(c=>{
-        let opt = document.createElement("option");
-        opt.value = c.client_id;
-        opt.textContent = `${c.name} (${c.mobile})`;
-        select.appendChild(opt);
+        const op=document.createElement("option");
+        op.value=c.client_id; op.textContent=`${c.name} (${c.mobile})`;
+        select.appendChild(op);
     });
-    document.getElementById("loading").textContent = "";
+    qs("loading").textContent="";
+    updateStats();
 }
 
+// بحث العملاء
+function filterClientSelect(){
+    const q=qs("client_search").value.toLowerCase();
+    Array.from(qs("client_select").options).forEach(op=>{
+        if(op.value==="") return;
+        op.style.display=op.textContent.toLowerCase().includes(q)?"":"none";
+    });
+}
+
+// إضافة عميل
 async function addClient(){
-    const name = document.getElementById("new_name").value.trim();
-    const mobile = document.getElementById("new_mobile").value.trim();
-    const username = document.getElementById("new_username").value.trim();
-    const password = document.getElementById("new_password").value.trim();
-    const msg = document.getElementById("clientMsg");
-    if(!name || !mobile || !username || !password){ 
-        msg.textContent="يرجى تعبئة كل الحقول"; 
-        msg.style.color="red"; 
-        return; 
-    }
-    const res = await fetch(API, { method:"POST", body: JSON.stringify({action:"addClient",name,mobile,username,password})});
-    const data = await res.json();
-
-    if(data.status==="success"){ 
-        msg.textContent="تمت الإضافة بنجاح"; 
-        msg.style.color="green"; 
-        closeAddClientModal(); 
-        loadClients();
-
-        // اختفاء الرسالة بعد 3 ثواني
-        setTimeout(() => { msg.textContent = ""; }, 3000);
-    } else { 
-        msg.textContent="حدث خطأ أثناء الإضافة"; 
-        msg.style.color="red"; 
-    }
-} // نهاية addClient
-
-async function addTrans(){
-    const client_id = document.getElementById("client_select").value;
-    let amount = Number(document.getElementById("amount").value);
-    const type = document.getElementById("type").value;
-    const note = document.getElementById("note").value;
-    const msg = document.getElementById("msg");
-    if(!client_id || !amount || !note){ 
-        msg.textContent="يرجى تعبئة كل الحقول"; 
-        msg.style.color="red"; 
-        return; 
-    }
-    amount = type==="credit" ? -Math.abs(amount) : Math.abs(amount);
-    const res = await fetch(API,{ method:"POST", body: JSON.stringify({action:"addTransaction",client_id,amount,type,note})});
-    const data = await res.json();
-
-    if(data.status==="success"){ 
-        msg.textContent = "تمت الإضافة بنجاح"; 
-        msg.style.color = "green"; 
-        document.getElementById("amount").value=""; 
-        document.getElementById("note").value=""; 
-        loadTransactions();
-
-        // اختفاء الرسالة بعد 3 ثواني
-        setTimeout(() => { msg.textContent = ""; }, 3000);
-    } else { 
-        msg.textContent="حدث خطأ أثناء الإضافة"; 
-        msg.style.color="red"; 
-    }
+    const name=qs("new_name").value.trim();
+    const mobile=qs("new_mobile").value.trim();
+    const username=qs("new_username").value.trim();
+    const password=qs("new_password").value.trim();
+    const msg=qs("clientMsg");
+    if(!name||!mobile||!username||!password){ msg.textContent="يرجى تعبئة كل الحقول"; msg.style.color="red"; return; }
+    const res=await fetch(API,{method:"POST",body:JSON.stringify({action:"addClient",name,mobile,username,password})});
+    const data=await res.json();
+    if(data.status==="success"){ msg.textContent="تمت الإضافة بنجاح"; msg.style.color="green"; loadClients(); setTimeout(()=>closeModal("addClientModal"),800);}
+    else{ msg.textContent="حدث خطأ أثناء الإضافة"; msg.style.color="red"; }
 }
 
-let currentClientId=""; let clientTransactions=[]; let currentTransId=null;
+// إضافة عملية مالية
+async function addTrans(){
+    const client_id=qs("client_select").value;
+    let amount=Number(qs("amount").value);
+    const type=qs("type").value; const note=qs("note").value;
+    const msg=qs("msg"); if(!client_id||!amount||!note){ msg.textContent="يرجى تعبئة كل الحقول"; msg.style.color="red"; return;}
+    amount=type==="credit"?-Math.abs(amount):Math.abs(amount);
+    const res=await fetch(API,{method:"POST",body:JSON.stringify({action:"addTransaction",client_id,amount,type,note})});
+    const data=await res.json();
+    if(data.status==="success"){ msg.textContent="تمت الإضافة بنجاح"; msg.style.color="green"; qs("amount").value=""; qs("note").value=""; loadTransactions(); setTimeout(()=>msg.textContent="",2000);}
+    else{ msg.textContent="حدث خطأ أثناء الإضافة"; msg.style.color="red";}
+}
 
+// تحميل العمليات
 async function loadTransactions(){
-    currentClientId=document.getElementById("client_select").value;
-    if(!currentClientId) return;
-    document.getElementById("loading").textContent = "جاري تحميل العمليات...";
-    const res = await fetch(API,{ method:"POST", body: JSON.stringify({action:"getClientData", client_id: currentClientId}) });
-    const data = await res.json();
-    document.getElementById("loading").textContent = "";
-    if(data.status!=="success") return;
-    clientTransactions = data.list.sort((a,b)=>new Date(b.date)-new Date(a.date));
-    const total = data.total;
-    document.getElementById("total_info").textContent = `إجمالي الرصيد: ${total>=0?"عليه "+total:"له "+Math.abs(total)} ريال`;
+    currentClientId=qs("client_select").value; if(!currentClientId) return;
+    qs("loading").textContent="جاري تحميل العمليات...";
+    const res=await fetch(API,{method:"POST",body:JSON.stringify({action:"getClientData",client_id:currentClientId})});
+    const data=await res.json();
+    qs("loading").textContent=""; if(data.status!=="success") return;
+    clientTransactions=data.list.sort((a,b)=>new Date(b.date)-new Date(a.date));
+    const total=data.total;
+    const client=allClients.find(c=>c.client_id==currentClientId)||{};
+    qs("total_info").textContent= total>=0?`إجمالي الرصيد: عليه ${total} ريال`:`إجمالي الرصيد: له ${Math.abs(total)} ريال`;
+    updateStats();
     renderTransactions(clientTransactions.slice(0,3));
 }
 
+// عرض كل العمليات
 function showAllTransactions(){ renderTransactions(clientTransactions); }
 
-function openTransModal(trans_id){
-    currentTransId=trans_id;
-    const t=clientTransactions.find(tr=>tr.trans_id==trans_id);
-    if(!t) return;
-    document.getElementById("modal_amount").value=Math.abs(t.amount);
-    document.getElementById("modal_type").value=t.type;
-    document.getElementById("modal_note").value=t.note;
-    document.getElementById("transModal").style.display="block";
-}
-
-async function saveTransModal(){
-    if(!currentTransId) return;
-    let amount=Number(document.getElementById("modal_amount").value);
-    const type=document.getElementById("modal_type").value;
-    const note=document.getElementById("modal_note").value;
-    if(!amount||!note){ alert("يرجى تعبئة كل الحقول"); return; }
-    amount = type==="credit" ? -Math.abs(amount) : Math.abs(amount);
-    const res=await fetch(API,{ method:"POST", body: JSON.stringify({ action:"updateTransaction", trans_id:currentTransId, amount, type, note }) });
-    const data=await res.json();
-    if(data.success||data.status==="success"){ alert("تم الحفظ بنجاح"); closeTransModal(); loadTransactions(); }
-    else alert("حدث خطأ أثناء الحفظ");
-}
-
-async function deleteTransModal(){
-    if(!currentTransId) return;
-    if(!confirm("هل أنت متأكد من حذف العملية؟")) return;
-    const res=await fetch(API,{ method:"POST", body: JSON.stringify({action:"deleteTransaction",trans_id:currentTransId}) });
-    const data=await res.json();
-    if(data.success||data.status==="success"){ alert("تم الحذف بنجاح"); closeTransModal(); loadTransactions(); }
-    else alert("حدث خطأ أثناء الحذف");
-}
-
+// جدول العمليات
 function renderTransactions(transactions){
-    const table = document.getElementById("transTable");
-    table.innerHTML = '';
-    const header = ["ID","العميل","المبلغ","النوع","البيان","التاريخ","واتساب"];
-    const trHeader = document.createElement("tr");
-    header.forEach(h => { const th = document.createElement("th"); th.textContent = h; trHeader.appendChild(th); });
-    table.appendChild(trHeader);
+    const table = qs("transTable");
+    table.innerHTML = "";
 
-    const clientName = allClients.find(c => c.client_id == currentClientId)?.name || "غير معروف";
-    const clientMobile = allClients.find(c => c.client_id == currentClientId)?.mobile || "";
+    // رؤوس الأعمدة الجديدة بدون ID واسم العميل
+    const header = ["المبلغ","النوع","البيان","التاريخ","واتساب"];
+    const trH = document.createElement("tr");
+    header.forEach(h => {
+        const th = document.createElement("th");
+        th.textContent = h;
+        trH.appendChild(th);
+    });
+    table.appendChild(trH);
+
+    const client = allClients.find(c => c.client_id == currentClientId) || {};
+    const clientName = client.name || "";
+    const clientMobile = client.mobile || "";
 
     transactions.forEach(t => {
         const row = table.insertRow();
         row.onclick = () => openTransModal(t.trans_id);
 
+        // خلايا الجدول بدون ID واسم العميل
         const cells = [
-            t.trans_id,
-            clientName,
             Math.abs(t.amount),
-            t.type==='debit'?'عليه':'له',
+            t.type === "debit" ? "عليه" : "له",
             t.note,
             new Date(t.date).toLocaleDateString()
         ];
 
-        cells.forEach((c,i) => {
-            const cell = row.insertCell();
-            cell.textContent = c;
-            if(i===2){ cell.className = t.type==='debit'?'debit':'credit'; }
+        cells.forEach((c, i) => {
+            const td = row.insertCell();
+            td.textContent = c;
+            if (i === 0) td.className = t.type === "debit" ? "debit" : "credit"; // تلوين المبلغ
         });
 
-        // زر واتساب مع رسالة احترافية + ايموجي
-        const waCell = row.insertCell();
-        const waBtn = document.createElement("button");
-        waBtn.textContent = "واتساب";
-        waBtn.style.background="#25D366";
-        waBtn.style.color="#fff";
-        waBtn.style.border="none";
-        waBtn.style.padding="6px 12px";
-        waBtn.style.borderRadius="6px";
-        waBtn.style.cursor="pointer";
+        // زر واتساب
+// زر واتساب
+const waCell = row.insertCell();
+const btn = document.createElement("button");
+btn.className = "wa-btn";
+btn.innerHTML = `<img src="${waIcon}"> واتساب`;
+btn.onclick = e => {
+    e.stopPropagation();
 
-        waBtn.onclick = (e) => {
-            e.stopPropagation();
-            const total = clientTransactions.reduce((sum,tr) => sum + Number(tr.amount), 0);
-            const typeText = t.type==='debit' ? 'عليكم' : 'لكم';
-            const totalText = total >= 0 ? `عليكم ${total}` : `لكم ${Math.abs(total)}`;
-const msg = `\u{1F464} الاخ: ${clientName}
-\u{1F4B0} قيد ${typeText} مبلغ: ${Math.abs(t.amount)} ريال
-\u{1F4DD} البيان: ${t.note}
+    const total = clientTransactions.reduce((s, x) => s + Number(x.amount), 0);
+
+    const typeText = t.type === "debit" ? "عليك" : "لك";
+    const totalText = total >= 0 ? "عليك " + total : "لك " + Math.abs(total);
+
+    const msg = `\u{1F464} *الاخ:* ${clientName}
+\u{1F4B0} *قيد ${typeText} مبلغ:* ${Math.abs(t.amount)} ريال
+\u{1F4DD} *البيان:* ${t.note}
 ---------------
-\u{1F4CA} صافي حسابك:
-    ${totalText} ريال
+\u{1F4CA} *صافي حسابك:*
+      ${totalText} ريال
 
 \u{2B50} #يمن-ستلايت`;
 
-            const url = `https://wa.me/${clientMobile}?text=${encodeURIComponent(msg)}`;
-            window.open(url, "_blank");
-        };
+    window.open(`https://wa.me/${clientMobile}?text=${encodeURIComponent(msg)}`);
+};
+waCell.appendChild(btn);
 
-        waCell.appendChild(waBtn);
     });
 }
 
 
+// تعديل وحذف العملية
+function openTransModal(id){ currentTransId=id; const t=clientTransactions.find(x=>x.trans_id==id); if(!t) return; qs("modal_amount").value=Math.abs(t.amount); qs("modal_type").value=t.type; qs("modal_note").value=t.note; openModal("transModal"); }
+async function saveTransModal(){ if(!currentTransId) return; let amount=Number(qs("modal_amount").value); const type=qs("modal_type").value; const note=qs("modal_note").value; amount=type==="credit"?-Math.abs(amount):Math.abs(amount);
+    await fetch(API,{method:"POST",body:JSON.stringify({action:"updateTransaction",trans_id:currentTransId,amount,type,note})}); closeModal("transModal"); loadTransactions(); }
+async function deleteTransModal(){ if(!confirm("هل تريد حذف العملية؟")) return; await fetch(API,{method:"POST",body:JSON.stringify({action:"deleteTransaction",trans_id:currentTransId})}); closeModal("transModal"); loadTransactions(); }
+
+// طباعة PDF مع اسم العميل وصافي الحساب
+function printTransactions() {
+    if (!clientTransactions.length) return alert("لا توجد عمليات للطباعة");
+
+    const client = allClients.find(c => c.client_id == currentClientId) || {};
+    const clientName = client.name || "";
+    const total = clientTransactions.reduce((s, x) => s + Number(x.amount), 0);
+
+    // بيانات الشركة
+    const companyName = " يمن ستلايت";
+    const companyPhone = "73092209"; // ضع رقم الهاتف أو البريد إذا أردت
+    const logoUrl = "https://raw.githubusercontent.com/falahsab/daftar/refs/heads/main/img/%D8%AF%D9%81%D8%AA%D8%B1-%D9%8A%D9%85%D9%86-%D8%B3%D8%AA%D9%84%D8%A7%D9%8A%D8%AA-192.png"; // ضع رابط شعار الشركة إذا أردت
+
+    const html = `
+    <html lang="ar" dir="rtl">
+    <head>
+        <meta charset="UTF-8">
+        <title> حساب: ${clientName}</title>
+        <style>
+            body { font-family: "Tajawal", sans-serif; direction: rtl; margin:20px; color:#0F172A; }
+            header { display:flex; justify-content: space-between; align-items:center; border-bottom: 2px solid #00693B; padding-bottom:10px; margin-bottom:20px; }
+            header img { height:60px; }
+            header .client-info { text-align: center; flex:1; }
+            header .client-info h2 { margin:0; color:#00693B; font-size:1.3em; }
+            header .client-info p { margin:0; font-size:0.95em; }
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            th, td { border: 1px solid #444; padding: 10px; text-align: center; }
+            th { background: #00A651; color: white; }
+            tbody tr:nth-child(even) { background-color: #f2f2f2; }
+            .debit { color: red; font-weight: bold; }
+            .credit { color: green; font-weight: bold; }
+            tfoot td { font-weight: bold; font-size: 1.05em; }
+            footer { margin-top: 40px; text-align: left; font-weight: bold; font-size:0.9em; }
+            @media print {
+                body { margin: 0; }
+                table { page-break-inside: auto; }
+                tr { page-break-inside: avoid; page-break-after: auto; }
+                thead { display: table-header-group; }
+                tfoot { display: table-footer-group; }
+                footer { position: fixed; bottom: 0; left: 20px; }
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            ${logoUrl ? `<img src="${logoUrl}" alt="Logo">` : '<div style="width:60px;"></div>'}
+            <div class="client-info">
+                <h2>كشف تفصيلي</h2>
+                <p>لحساب الاخ: ${clientName}</p>
+            </div>
+            <div style="width:60px;"></div>
+        </header>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>المبلغ</th>
+                    <th>النوع</th>
+                    <th>البيان</th>
+                    <th>التاريخ</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${clientTransactions.map(t => {
+                    const date = new Date(t.date);
+                    const formattedDate = `${date.getDate()}/${date.getMonth()+1}/${date.getFullYear()}`;
+                    return `
+                        <tr>
+                            <td class="${t.type === "debit" ? "debit" : "credit"}">${Math.abs(t.amount)}</td>
+                            <td>${t.type === "debit" ? "عليه" : "له"}</td>
+                            <td>${t.note}</td>
+                            <td>${formattedDate}</td>
+                        </tr>
+                    `;
+                }).join('')}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3" style="text-align: right;">صافي الحساب</td>
+                    <td style="color:${total >= 0 ? 'red' : 'green'};">
+                        ${total >= 0 ? `عليه ${total}` : `له ${Math.abs(total)}`}
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <footer>${companyName} | ${companyPhone}</footer>
+    </body>
+    </html>
+    `;
+
+    const win = window.open("", "_blank");
+    win.document.write(html);
+    win.document.close();
+    win.focus();
+    setTimeout(() => win.print(), 500);
+}
+
+
+// عرض العملاء وصافي الحساب
+async function showClientsBalances(){
+    const res=await fetch(API,{method:"POST",body:JSON.stringify({action:"getClientsBalance"})});
+    const data=await res.json(); if(!Array.isArray(data)) return alert("خطأ في البيانات");
+    data.sort((a,b)=>b.total-a.total);
+    const tbody=document.querySelector("#clientsBalanceTable tbody"); tbody.innerHTML="";
+    data.forEach(c=>{
+        const tr=document.createElement("tr");
+        tr.innerHTML=`<td>${c.client_id}</td><td>${c.name}</td><td>${c.mobile}</td>
+        <td style="font-weight:bold;color:${c.total>=0?'red':'green'}">${c.total>=0?`عليه ${c.total}`:`له ${Math.abs(c.total)}`}</td>`;
+        tbody.appendChild(tr);
+    });
+    openModal("clientsModal");
+}
+function filterClientsTable(){
+    const q=qs("search_client").value.toLowerCase();
+    document.querySelectorAll("#clientsBalanceTable tbody tr").forEach(r=>{
+        const name=r.children[1].textContent.toLowerCase();
+        const mobile=r.children[2].textContent.toLowerCase();
+        r.style.display=(name.includes(q)||mobile.includes(q))?"":"none";
+    });
+}
+
+// تحديث الإحصائيات
+function updateStats(){
+    qs("stat_clients").textContent=`عدد العملاء: ${allClients.length}`;
+    if(clientTransactions.length){ qs("stat_last").textContent="آخر عملية: "+new Date(clientTransactions[0].date).toLocaleDateString(); }
+    else{ qs("stat_last").textContent="لا عمليات"; }
+    const sum=clientTransactions.reduce((s,x)=>s+Number(x.amount),0);
+    qs("stat_total").textContent=sum>=0?`صافي الحساب: عليه ${sum}`:`صافي الحساب: له ${Math.abs(sum)}`;
+}
 
 loadClients();
-document.getElementById("client_select").addEventListener("change",loadTransactions);
+qs("client_select").addEventListener("change", loadTransactions);
 
-// إغلاق النوافذ عند الضغط خارجها
-window.onclick = function(event){
-    const addModal = document.getElementById("addClientModal");
-    const transModal = document.getElementById("transModal");
-    if(event.target===addModal) addModal.style.display="none";
-    if(event.target===transModal) transModal.style.display="none";
-};
+  // طباعة قائمة العملاء وصافي حساباتهم
+function printClientsList() {
+    const rows = Array.from(document.querySelectorAll("#clientsBalanceTable tbody tr"))
+                      .filter(r => r.style.display !== "none"); // تجاهل الصفوف المخفية
 
-// ===================== إضافات: جلب وعرض صافي حسابات العملاء =====================
+    if (!rows.length) return alert("لا توجد بيانات للطباعة");
 
-// جلب صافي الحسابات وعرضها في مودال
-async function showClientsBalances() {
-    document.getElementById("loading").textContent = "جاري تحميل أرصدة العملاء...";
-    try {
-        const res = await fetch(API, { method: "POST", body: JSON.stringify({ action: "getClientsBalance" }) });
-        const data = await res.json();
-        document.getElementById("loading").textContent = "";
+    const companyName = " يمن ستلايت";
+    const companyPhone = "123456789";
+    const logoUrl = ""; // شعار الشركة
 
-        if (!Array.isArray(data)) {
-            alert("حدث خطأ أثناء جلب البيانات");
-            return;
-        }
+    const html = `
+    <html lang="ar" dir="rtl">
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            body { font-family: "Tajawal", sans-serif; direction: rtl; margin:20px; color:#0F172A; }
+            header { display:flex; justify-content: space-between; align-items:center; border-bottom: 2px solid #00693B; padding-bottom:10px; margin-bottom:20px; }
+            header img { height:60px; }
+            header .report-info { text-align: center; flex:1; }
+            header .report-info h2 { margin:0; color:#00693B; font-size:1.3em; }
+            header .report-info p { margin:0; font-size:0.95em; }
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            th, td { border: 1px solid #444; padding: 10px; text-align: center; }
+            th { background: #00A651; color: white; }
+            tbody tr:nth-child(even) { background-color: #f2f2f2; }
+            tfoot td { font-weight: bold; font-size: 1.05em; }
+            footer { margin-top: 40px; text-align: left; font-weight: bold; font-size:0.9em; }
+            @media print {
+                body { margin: 0; }
+                table { page-break-inside: auto; }
+                tr { page-break-inside: avoid; page-break-after: auto; }
+                thead { display: table-header-group; }
+                tfoot { display: table-footer-group; }
+                footer { position: fixed; bottom: 0; left: 20px; }
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            ${logoUrl ? `<img src="${logoUrl}" alt="Logo">` : '<div style="width:60px;"></div>'}
+            <div class="report-info">
+                <h2>قائمة العملاء وصافي الحساب</h2>
+                <p>عدد العملاء: ${rows.length}</p>
+            </div>
+            <div style="width:60px;"></div>
+        </header>
 
-        // تعبئة الجدول
-        const tbody = document.querySelector("#clientsBalanceTable tbody");
-        tbody.innerHTML = "";
-        data.forEach(c => {
-            const tr = document.createElement("tr");
-            const idTd = document.createElement("td");
-            idTd.textContent = c.client_id;
-            const nameTd = document.createElement("td");
-            nameTd.textContent = c.name;
-            const mobileTd = document.createElement("td");
-            mobileTd.textContent = c.mobile;
-            const totalTd = document.createElement("td");
-            const totalVal = Number(c.total);
-            totalTd.textContent = totalVal >= 0 ? `عليه ${totalVal}` : `له ${Math.abs(totalVal)}`;
-            totalTd.style.fontWeight = "bold";
-            totalTd.style.color = totalVal >= 0 ? "red" : "green";
+        <table>
+            <thead>
+                <tr>
+                    <th>العميل</th>
+                    <th>الجوال</th>
+                    <th>صافي الحساب</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${rows.map(r => {
+                    const name = r.children[1].textContent;
+                    const mobile = r.children[2].textContent;
+                    const totalText = r.children[3].textContent.trim(); // مثال: "عليه 500" أو "له 200"
+                    
+                    // تحديد اللون
+                    const color = totalText.startsWith("عليه") ? "red" : "green";
 
-            tr.appendChild(idTd);
-            tr.appendChild(nameTd);
-            tr.appendChild(mobileTd);
-            tr.appendChild(totalTd);
-            tbody.appendChild(tr);
-        });
+                    return `<tr>
+                                <td>${name}</td>
+                                <td>${mobile}</td>
+                                <td style="color:${color}; font-weight:bold;">${totalText}</td>
+                            </tr>`;
+                }).join('')}
+            </tbody>
+        </table>
 
-        // فتح المودال
-        openClientsModal();
-    } catch (err) {
-        document.getElementById("loading").textContent = "";
-        alert("فشل جلب أرصدة العملاء");
-        console.error(err);
-    }
+        <footer>${companyName} | ${companyPhone}</footer>
+    </body>
+    </html>
+    `;
+
+    const win = window.open("", "_blank");
+    win.document.title = " "; // لتجنب about:blank
+    win.document.write(html);
+    win.document.close();
+    win.focus();
+    setTimeout(() => win.print(), 500);
 }
 
-function openClientsModal() {
-    const m = document.getElementById("clientsModal");
-    m.style.display = "flex";
-    m.style.alignItems = "center";
-}
-
-function closeClientsModal() {
-    document.getElementById("clientsModal").style.display = "none";
-}
-
-// فلترة بسيطة لجدول العملاء
-function filterClientsTable() {
-    const q = document.getElementById("search_client").value.trim().toLowerCase();
-    const rows = document.querySelectorAll("#clientsBalanceTable tbody tr");
-    rows.forEach(r => {
-        const name = r.children[1].textContent.toLowerCase();
-        const mobile = r.children[2].textContent.toLowerCase();
-        if (name.includes(q) || mobile.includes(q) || q === "") r.style.display = "";
-        else r.style.display = "none";
-    });
-}
-
-// ==============================================================================
