@@ -10,23 +10,27 @@
 
 <body>
 
-
 <script>
-// تحقق من صلاحية الأدمن
-const role = localStorage.getItem("role");
-if(role !== "admin") { alert("يجب تسجيل الدخول كأدمن"); window.location.href="index.html"; }
+if(localStorage.getItem("role")!=="admin"){ alert("يجب تسجيل الدخول كأدمن"); window.location.href="index.html"; }
 </script>
 
 <div class="card">
+
 <h2>لوحة الإدارة | يمن ستلايت</h2>
 <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
 
+<div style="display:flex;gap:10px;margin:15px 0;">
+    <div class="stat-box" id="stat_clients">جاري التحميل...</div>
+    <div class="stat-box" id="stat_total">---</div>
+    <div class="stat-box" id="stat_last">---</div>
+</div>
+<button type="button" onclick="openModal('addClientModal')">إضافة عميل جديد</button>
 <h3>إضافة عملية مالية</h3>
 
 <select id="client_select">
     <option value="">اختر العميل</option>
 </select>
-<button type="button" onclick="showAddClientModal()">إضافة عميل جديد</button>
+
 
 <input id="amount" type="number" placeholder="المبلغ">
 <select id="type">
@@ -42,85 +46,85 @@ if(role !== "admin") { alert("يجب تسجيل الدخول كأدمن"); windo
        data-lpignore="true"
        autocapitalize="off"
        spellcheck="false">
-<button type="button" onclick="addTrans()">إضافة العملية</button>
+<button id="addTransBtn" type="button" onclick="addTrans()">إضافة العملية</button>
+
 <p id="msg"></p>
 <p id="loading"></p>
 
 <h3>آخر 3 عمليات للعميل</h3>
 <p id="total_info"></p>
-<button type="button" onclick="showAllTransactions()">عرض كل العمليات</button>
 
-<!-- زر جديد لعرض جميع العملاء وصافي حساباتهم -->
+<button type="button" onclick="showAllTransactions()">عرض كل العمليات</button>
+<button type="button" onclick="printTransactions()" style="background:#7a39ff;">طباعة PDF</button>
 
 <div class="table-container">
-    <table id="transTable">
-        <tr><th>ID</th><th>العميل</th><th>المبلغ</th><th>النوع</th><th>البيان</th><th>التاريخ</th></tr>
-    </table>
-</div>
-<button type="button" onclick="showClientsBalances()" style="background:#0b74de;">عرض جميع العملاء وصافي حساباتهم</button>
+    <table id="transTable"></table>
 </div>
 
-<!-- نافذة إضافة عميل -->
+<button onclick="showClientsBalances()" style="background:#0b74de">عرض جميع العملاء وصافي حساباتهم</button>
+
+
+</div>
+
+<!-- مودال إضافة العميل -->
 <div id="addClientModal" class="modal">
   <div class="modal-content">
-    <span class="close" onclick="closeAddClientModal()">&times;</span>
+    <span class="close" onclick="closeModal('addClientModal')">&times;</span>
     <h3>إضافة عميل جديد</h3>
     <input id="new_name" placeholder="الاسم">
-    <input id="new_mobile"type="number" placeholder="رقم الجوال">
+    <input id="new_mobile" type="number" placeholder="رقم الجوال">
     <input id="new_username" placeholder="اسم المستخدم">
     <input id="new_password" type="password" placeholder="كلمة المرور">
-    <button type="button" onclick="addClient()">إضافة العميل</button>
+    <button onclick="addClient()">إضافة العميل</button>
     <p id="clientMsg"></p>
   </div>
 </div>
 
-<!-- نافذة تعديل/حذف العملية -->
+<!-- مودال تعديل العملية -->
 <div id="transModal" class="modal">
   <div class="modal-content">
-    <span class="close" onclick="closeTransModal()">&times;</span>
+    <span class="close" onclick="closeModal('transModal')">&times;</span>
     <h3>تعديل العملية</h3>
     <input id="modal_amount" type="number" placeholder="المبلغ">
     <select id="modal_type">
         <option value="debit">عليه</option>
         <option value="credit">له</option>
     </select>
-    <input id="modal_note" placeholder="البيان" autocomplete="off">
-    <div style="display:flex; gap:10px; margin-top:10px;">
-        <button type="button" onclick="saveTransModal()">حفظ</button>
-        <button type="button" onclick="deleteTransModal()" style="background:#EF4444">حذف</button>
-        <button type="button" onclick="closeTransModal()" style="background:#888">إلغاء</button>
+    <input id="modal_note" placeholder="البيان">
+    <div style="display:flex;gap:10px;margin-top:10px;">
+        <button onclick="saveTransModal()">حفظ</button>
+        <button onclick="deleteTransModal()" style="background:#EF4444">حذف</button>
+        <button onclick="closeModal('transModal')" style="background:#888">إلغاء</button>
     </div>
   </div>
 </div>
 
-<!-- مودال عرض العملاء وصافي الحسابات -->
-<div id="clientsModal">
+<!-- مودال العملاء -->
+<div id="clientsModal" class="modal">
   <div class="modal-body">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <h3 style="margin:0;">قائمة العملاء وصافي الحساب</h3>
-      <button class="close-btn" onclick="closeClientsModal()">إغلاق</button>
-    </div>
-
-    <div style="margin-top:12px;">
-      <input id="search_client" placeholder="ابحث بالاسم أو رقم الجوال" oninput="filterClientsTable()" />
-    </div>
-
-    <div style="overflow:auto; margin-top:10px;">
+      <div style="display:flex;justify-content:space-between">
+        <h3>قائمة العملاء وصافي الحساب</h3>
+        <button class="close-btn" onclick="closeModal('clientsModal')" style="background:#EF4444;padding:6px 12px">إغلاق</button>
+      </div>
+      <input id="search_client" placeholder="ابحث بالاسم أو رقم الجوال" oninput="filterClientsTable()" style="margin-top:10px">
       <table id="clientsBalanceTable">
         <thead>
-          <tr>
-            <th>ID</th>
-            <th>العميل</th>
-            <th>رقم الجوال</th>
-            <th>صافي الحساب</th>
-          </tr>
+            <tr>
+                <th>ID</th>
+                <th>العميل</th>
+                <th>الجوال</th>
+                <th>صافي الحساب</th>
+            </tr>
         </thead>
         <tbody></tbody>
       </table>
-    </div>
+      <button onclick="printClientsList()" style="background:#0b74de; color:white; margin-top:10px;">طباعة قائمة العملاء</button>
+
   </div>
+  
 </div>
 <script src="js/admin.js"></script>
 </body>
 </html>
+
 
