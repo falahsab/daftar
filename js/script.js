@@ -68,3 +68,13 @@ document.addEventListener("click", () => {
         localStorage.setItem("session_expire", Date.now() + sessionDuration);
     }
 });
+// يعمل زر Enter للدخول
+document.addEventListener("DOMContentLoaded", () => {
+    const form = document.getElementById("loginForm");
+    if (form) {
+        form.addEventListener("submit", (e) => {
+            e.preventDefault(); // منع إعادة تحميل الصفحة
+            login();            // استدعاء دالة تسجيل الدخول
+        });
+    }
+});
