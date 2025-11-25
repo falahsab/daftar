@@ -120,32 +120,17 @@ function renderTransactions(transactions){
         });
 
         // زر واتساب
-// زر واتساب
-const waCell = row.insertCell();
-const btn = document.createElement("button");
-btn.className = "wa-btn";
-btn.innerHTML = `<img src="${waIcon}"> واتساب`;
-btn.onclick = e => {
-    e.stopPropagation();
-
-    const total = clientTransactions.reduce((s, x) => s + Number(x.amount), 0);
-
-    const typeText = t.type === "debit" ? "عليك" : "لك";
-    const totalText = total >= 0 ? "عليك " + total : "لك " + Math.abs(total);
-
-    const msg = `\u{1F464} *الاخ:* ${clientName}
-\u{1F4B0} *قيد ${typeText} مبلغ:* ${Math.abs(t.amount)} ريال
-\u{1F4DD} *البيان:* ${t.note}
----------------
-\u{1F4CA} *صافي حسابك:*
-      ${totalText} ريال
-
-\u{2B50} #يمن-ستلايت`;
-
-    window.open(`https://wa.me/${clientMobile}?text=${encodeURIComponent(msg)}`);
-};
-waCell.appendChild(btn);
-
+        const waCell = row.insertCell();
+        const btn = document.createElement("button");
+        btn.className = "wa-btn";
+        btn.innerHTML = `<img src="${waIcon}"> واتساب`;
+        btn.onclick = e => {
+            e.stopPropagation();
+            const total = clientTransactions.reduce((s, x) => s + Number(x.amount), 0);
+            const msg = `العميل: ${clientName}\nالمبلغ: ${Math.abs(t.amount)} ريال\nالنوع: ${t.type === "debit" ? "عليه" : "له"}\nالبيان: ${t.note}\n-----------------\nصافي الحساب: ${total >= 0 ? "عليه "+total : "له "+Math.abs(total)} ريال`;
+            window.open(`https://wa.me/${clientMobile}?text=${encodeURIComponent(msg)}`);
+        };
+        waCell.appendChild(btn);
     });
 }
 
@@ -165,15 +150,15 @@ function printTransactions() {
     const total = clientTransactions.reduce((s, x) => s + Number(x.amount), 0);
 
     // بيانات الشركة
-    const companyName = " يمن ستلايت";
-    const companyPhone = "73092209"; // ضع رقم الهاتف أو البريد إذا أردت
+    const companyName = "شركة يمن ستلايت";
+    const companyPhone = "123456789"; // ضع رقم الهاتف أو البريد إذا أردت
     const logoUrl = "https://raw.githubusercontent.com/falahsab/daftar/refs/heads/main/img/%D8%AF%D9%81%D8%AA%D8%B1-%D9%8A%D9%85%D9%86-%D8%B3%D8%AA%D9%84%D8%A7%D9%8A%D8%AA-192.png"; // ضع رابط شعار الشركة إذا أردت
 
     const html = `
     <html lang="ar" dir="rtl">
     <head>
         <meta charset="UTF-8">
-        <title> حساب: ${clientName}</title>
+        <title>YemenSAT</title>
         <style>
             body { font-family: "Tajawal", sans-serif; direction: rtl; margin:20px; color:#0F172A; }
             header { display:flex; justify-content: space-between; align-items:center; border-bottom: 2px solid #00693B; padding-bottom:10px; margin-bottom:20px; }
@@ -203,8 +188,8 @@ function printTransactions() {
         <header>
             ${logoUrl ? `<img src="${logoUrl}" alt="Logo">` : '<div style="width:60px;"></div>'}
             <div class="client-info">
-                <h2>كشف تفصيلي</h2>
-                <p>لحساب الاخ: ${clientName}</p>
+                <h2>تقرير عمليات العميل</h2>
+                <p>اسم العميل: ${clientName}</p>
             </div>
             <div style="width:60px;"></div>
         </header>
@@ -257,22 +242,53 @@ function printTransactions() {
 
 // عرض العملاء وصافي الحساب
 async function showClientsBalances(){
-    const res=await fetch(API,{method:"POST",body:JSON.stringify({action:"getClientsBalance"})});
-    const data=await res.json(); if(!Array.isArray(data)) return alert("خطأ في البيانات");
-    data.sort((a,b)=>b.total-a.total);
-    const tbody=document.querySelector("#clientsBalanceTable tbody"); tbody.innerHTML="";
-    data.forEach(c=>{
-        const tr=document.createElement("tr");
-        tr.innerHTML=`<td>${c.client_id}</td><td>${c.name}</td><td>${c.mobile}</td>
-        <td style="font-weight:bold;color:${c.total>=0?'red':'green'}">${c.total>=0?`عليه ${c.total}`:`له ${Math.abs(c.total)}`}</td>  <td>
+    const res = await fetch(API, { method: "POST", body: JSON.stringify({ action: "getClientsBalance" }) });
+    const data = await res.json(); 
+    if(!Array.isArray(data)) return alert("خطأ في البيانات");
+
+    data.sort((a,b) => b.total - a.total);
+
+    const tbody = document.querySelector("#clientsBalanceTable tbody"); 
+    tbody.innerHTML = "";
+
+    data.forEach(c => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${c.client_id}</td>
+            <td>${c.name}</td>
+            <td>${c.mobile}</td>
+            <td style="font-weight:bold;color:${c.total>=0?'red':'green'}">
+                ${c.total>=0?`عليه ${c.total}`:`له ${Math.abs(c.total)}`}
+            </td>
+            <td>
                 <button style="background:#EF4444;color:white;padding:4px 8px;border:none;border-radius:4px;cursor:pointer;">
                     حذف
                 </button>
-            </td>`;
+            </td>
+        `;
         tbody.appendChild(tr);
+
+        // إضافة حدث الحذف مع تأكيد
+        tr.querySelector("button").addEventListener("click", async () => {
+            if(confirm(`هل تريد حذف العميل "${c.name}" وكل عملياته؟`)){
+                const res = await fetch(API, {
+                    method: "POST",
+                    body: JSON.stringify({ action: "deleteClient", client_id: c.client_id })
+                });
+                const data = await res.json();
+                if(data.status === "success"){
+                    alert("تم حذف العميل وكل عملياته بنجاح");
+                    showClientsBalances(); // إعادة تحميل الجدول
+                } else {
+                    alert("حدث خطأ أثناء الحذف");
+                }
+            }
+        });
     });
+
     openModal("clientsModal");
 }
+
 function filterClientsTable(){
     const q=qs("search_client").value.toLowerCase();
     document.querySelectorAll("#clientsBalanceTable tbody tr").forEach(r=>{
@@ -301,7 +317,7 @@ function printClientsList() {
 
     if (!rows.length) return alert("لا توجد بيانات للطباعة");
 
-    const companyName = " يمن ستلايت";
+    const companyName = "شركة يمن ستلايت";
     const companyPhone = "123456789";
     const logoUrl = ""; // شعار الشركة
 
@@ -380,6 +396,8 @@ function printClientsList() {
     win.focus();
     setTimeout(() => win.print(), 500);
 }
+
+
 //جهات الاتصال
 function closePopup() {
     document.getElementById("numberPopup").style.display = "none";
@@ -431,7 +449,7 @@ document.getElementById("pickContact").addEventListener("click", async () => {
     document.getElementById("numberPopup").style.display = "block";
 });
 
-//حذف عميل وعملياته
+//حذف عميلوعملياته
 async function deleteClient(client_id){
     if(!confirm("هل تريد حذف هذا العميل وجميع عملياته؟")) return;
 
@@ -449,4 +467,3 @@ async function deleteClient(client_id){
         alert("حدث خطأ أثناء الحذف");
     }
 }
-
