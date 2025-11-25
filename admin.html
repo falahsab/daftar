@@ -74,8 +74,10 @@ if(localStorage.getItem("role")!=="admin"){ alert("يجب تسجيل الدخو�
     <input id="new_name" placeholder="الاسم">
  <div class="input-group">
     <input id="new_mobile" type="tel" placeholder="رقم الجوال">
+
     <button class="pick-btn" id="pickContact">📱</button>
 </div>
+
     <input id="new_username" placeholder="اسم المستخدم">
     <input id="new_password" type="password" placeholder="كلمة المرور">
     <button onclick="addClient()">إضافة العميل</button>
@@ -110,6 +112,7 @@ if(localStorage.getItem("role")!=="admin"){ alert("يجب تسجيل الدخو�
         <button class="close-btn" onclick="closeModal('clientsModal')" style="background:#EF4444;padding:6px 12px">إغلاق</button>
       </div>
       <input id="search_client" placeholder="ابحث بالاسم أو رقم الجوال" oninput="filterClientsTable()" style="margin-top:10px">
+      
       <table id="clientsBalanceTable">
         <thead>
             <tr>
@@ -122,10 +125,12 @@ if(localStorage.getItem("role")!=="admin"){ alert("يجب تسجيل الدخو�
         </thead>
         <tbody></tbody>
       </table>
-      <button onclick="printClientsList()" style="background:#0b74de; color:white; margin-top:10px;">طباعة قائمة العملاء</button> 
+      <button onclick="printClientsList()" style="background:#0b74de; color:white; margin-top:10px;">طباعة قائمة العملاء</button>
+
+  </div>
+  
 </div>
-    </div>
-      </div>
+
 <div id="numberPopup" style="
     position: fixed;
     left: 50%;
@@ -143,10 +148,11 @@ if(localStorage.getItem("role")!=="admin"){ alert("يجب تسجيل الدخو�
     <h3 style="margin:0 0 10px;">اختر الرقم</h3>
     <div id="numbersList"></div>
     <button onclick="closePopup()" style="margin-top:10px;padding:6px 10px;">إلغاء</button>
-</div> 
+</div>
 <script src="js/admin.js"></script>
 </body>
 </html>
+
 
 
 
