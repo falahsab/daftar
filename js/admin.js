@@ -1,4 +1,4 @@
-const API = "https://script.google.com/macros/s/AKfycbyVpJCk3vbby4L9Pl3U2UwRz8S_NeD3kwpLWqGcDHOkxR2xj2A2S3KG94mXHHoRWuKi/exec";
+const API = "https://script.google.com/macros/s/AKfycbxYqTIZ2cmqd-9sRXNp27vli4MBpnCzgXJ4hxbEWMAg69ZRicb8pgjrGPGdkE7bPTLO/exec";
 const waIcon = "https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg";
 
 const qs = id => document.getElementById(id);
@@ -264,7 +264,11 @@ async function showClientsBalances(){
     data.forEach(c=>{
         const tr=document.createElement("tr");
         tr.innerHTML=`<td>${c.client_id}</td><td>${c.name}</td><td>${c.mobile}</td>
-        <td style="font-weight:bold;color:${c.total>=0?'red':'green'}">${c.total>=0?`عليه ${c.total}`:`له ${Math.abs(c.total)}`}</td>`;
+        <td style="font-weight:bold;color:${c.total>=0?'red':'green'}">${c.total>=0?`عليه ${c.total}`:`له ${Math.abs(c.total)}`}</td>  <td>
+                <button style="background:#EF4444;color:white;padding:4px 8px;border:none;border-radius:4px;cursor:pointer;">
+                    حذف
+                </button>
+            </td>`;
         tbody.appendChild(tr);
     });
     openModal("clientsModal");
@@ -375,5 +379,74 @@ function printClientsList() {
     win.document.close();
     win.focus();
     setTimeout(() => win.print(), 500);
+}
+//جهات الاتصال
+function closePopup() {
+    document.getElementById("numberPopup").style.display = "none";
+}
+
+document.getElementById("pickContact").addEventListener("click", async () => {
+    if (!("contacts" in navigator && "select" in navigator.contacts)) {
+        alert("المتصفح لا يدعم اختيار جهات الاتصال");
+        return;
+    }
+
+    const contacts = await navigator.contacts.select(["tel"], { multiple: false });
+    if (!contacts.length || !contacts[0].tel.length) return;
+
+    let numbers = contacts[0].tel.map(n => {
+        n = n.replace(/\s+/g, "")   // إزالة المسافات
+             .replace(/-/g, "")     // إزالة الشرطات
+             .replace(/\(/g, "")    // إزالة (
+             .replace(/\)/g, "");   // إزالة )
+        if (n.startsWith("+967")) n = n.slice(4);
+        else if (n.startsWith("00967")) n = n.slice(5);
+        else if (n.startsWith("967")) n = n.slice(3);
+        n = n.replace(/^0/, "");    // إزالة الصفر البادئ
+        return n;
+    });
+
+    // إذا رقم واحد فقط
+    if (numbers.length === 1) {
+        document.getElementById("new_mobile").value = numbers[0];
+        return;
+    }
+
+    // عرض popup للاختيار
+    const listDiv = document.getElementById("numbersList");
+    listDiv.innerHTML = "";
+
+    numbers.forEach(num => {
+        let btn = document.createElement("button");
+        btn.textContent = num;
+        btn.style.cssText =
+            "display:block;width:100%;margin:5px 0;padding:8px;border:none;background:#28a745;color:white;border-radius:6px;";
+        btn.addEventListener("click", () => {
+            document.getElementById("new_mobile").value = num; // هنا يلصق الرقم
+            closePopup(); // إغلاق البوب أب بعد الاختيار
+        });
+        listDiv.appendChild(btn);
+    });
+
+    document.getElementById("numberPopup").style.display = "block";
+});
+
+//حذف عميل وعملياته
+async function deleteClient(client_id){
+    if(!confirm("هل تريد حذف هذا العميل وجميع عملياته؟")) return;
+
+    // استدعاء API لحذف العميل
+    const res = await fetch(API, {
+        method: "POST",
+        body: JSON.stringify({action: "deleteClient", client_id})
+    });
+    const data = await res.json();
+
+    if(data.status === "success"){
+        alert("تم حذف العميل وكل عملياته بنجاح");
+        loadClients(); // إعادة تحميل العملاء
+    } else {
+        alert("حدث خطأ أثناء الحذف");
+    }
 }
 
