@@ -125,11 +125,29 @@ if(localStorage.getItem("role")!=="admin"){ alert("يجب تسجيل الدخو�
       <button onclick="printClientsList()" style="background:#0b74de; color:white; margin-top:10px;">طباعة قائمة العملاء</button>
 
   </div>
-  
+<div id="numberPopup" style="
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    display: none;
+    z-index: 9999;
+    width: 250px;
+    text-align: center;
+">
+    <h3 style="margin:0 0 10px;">اختر الرقم</h3>
+    <div id="numbersList"></div>
+    <button onclick="closePopup()" style="margin-top:10px;padding:6px 10px;">إلغاء</button>
+</div>  
 </div>
 <script src="js/admin.js"></script>
 </body>
 </html>
+
 
 
 
