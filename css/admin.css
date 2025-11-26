@@ -7,9 +7,9 @@
     --accent: #FFD700;
 }
 
-body { font-family: "Tajawal", sans-serif; background: var(--bg); margin:0; padding:20px; }
+body { font-family: "Tajawal", sans-serif; background: var(--bg); margin:-13; padding:20px; }
 
-.card { max-width: 1000px; margin:auto; background: var(--card-bg); padding:25px; border-radius:15px; box-shadow:0 4px 12px #0002; }
+.card { max-width: 1000px; margin:auto; background: var(--card-bg); padding:15px; border-radius:15px; box-shadow:0 4px 12px #0002; }
 
 h2,h3{ margin:12px 0; color: var(--primary); }
 
