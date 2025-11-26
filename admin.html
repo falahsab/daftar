@@ -111,7 +111,7 @@ if(localStorage.getItem("role")!=="admin"){ alert("يجب تسجيل الدخو�
         <h3>قائمة العملاء وصافي الحساب</h3>
         <button class="close-btn" onclick="closeModal('clientsModal')" style="background:#EF4444;padding:6px 12px">إغلاق</button>
       </div>
-      <input id="search_client" placeholder="ابحث بالاسم أو رقم الجوال" oninput="filterClientsTable()" style="margin-top:10px;margin-bottom: 10px;">
+      <input id="search_client" placeholder="ابحث بالاسم أو رقم الجوال" oninput="filterClientsTable()" style="margin-top:10px;margin-bottom: 10px">
       
       <table id="clientsBalanceTable">
         <thead>
@@ -153,6 +153,7 @@ if(localStorage.getItem("role")!=="admin"){ alert("يجب تسجيل الدخو�
 <script src="js/admin.js"></script>
 </body>
 </html>
+
 
 
 
