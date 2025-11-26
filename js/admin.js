@@ -138,6 +138,7 @@ btn.onclick = e => {
 ---------------
 \u{1F4CA} صافي حسابك:
     ${totalText} ريال
+    
 \u{2B50} #يمن-ستلايت`;
 
     const url = `https://wa.me/${clientMobile}?text=${encodeURIComponent(msg)}`;
@@ -165,7 +166,7 @@ function printTransactions() {
 
     // بيانات الشركة
     const companyName = "شركة يمن ستلايت";
-    const companyPhone = "123456789"; // ضع رقم الهاتف أو البريد إذا أردت
+    const companyPhone = "738092209"; // ضع رقم الهاتف أو البريد إذا أردت
     const logoUrl = "https://raw.githubusercontent.com/falahsab/daftar/refs/heads/main/img/%D8%AF%D9%81%D8%AA%D8%B1-%D9%8A%D9%85%D9%86-%D8%B3%D8%AA%D9%84%D8%A7%D9%8A%D8%AA-192.png"; // ضع رابط شعار الشركة إذا أردت
 
     const html = `
@@ -332,7 +333,7 @@ function printClientsList() {
     if (!rows.length) return alert("لا توجد بيانات للطباعة");
 
     const companyName = "شركة يمن ستلايت";
-    const companyPhone = "123456789";
+    const companyPhone = "738092209";
     const logoUrl = ""; // شعار الشركة
 
     const html = `
