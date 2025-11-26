@@ -81,3 +81,40 @@ width:50px;
     padding: 5px;     /* مسافة صغيرة جداً من حواف الشاشة */
   }
 }
+
+.wa-sms-group {
+    display: flex;
+    gap: 6px;       /* المسافة بين الأزرار */
+    justify-content: center;
+}
+
+.wa-sms-group button {
+    flex: 1;         /* يساوي عرض الأزرار داخل المجموعة */
+    padding: 6px 8px;
+    border: none;
+    border-radius: 6px;
+    color: white;
+    cursor: pointer;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    transition: 0.2s;
+}
+
+.wa-sms-group .wa-btn {
+    background: #25D366;
+}
+
+.wa-sms-group .wa-btn:hover {
+    background: #1ebe57;
+}
+
+.wa-sms-group .sms-btn {
+    background: #3b82f6;
+}
+
+.wa-sms-group .sms-btn:hover {
+    background: #2563eb;
+}
