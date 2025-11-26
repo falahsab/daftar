@@ -138,9 +138,6 @@ btn.onclick = e => {
 ---------------
 \u{1F4CA} صافي حسابك:
     ${totalText} ريال
-\u{1F4CA} *صافي حسابك:*
-      ${totalText} ريال
-
 \u{2B50} #يمن-ستلايت`;
 
     const url = `https://wa.me/${clientMobile}?text=${encodeURIComponent(msg)}`;
