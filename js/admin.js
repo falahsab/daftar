@@ -263,6 +263,29 @@ async function showClientsBalances(){
 
     data.sort((a,b) => b.total - a.total);
 
+    // حساب الإجماليات
+    let totalDebit = 0;   // عليه
+    let totalCredit = 0;  // له
+
+    data.forEach(c=>{
+        if(c.total >= 0) totalDebit += c.total;
+        else totalCredit += Math.abs(c.total);
+    });
+
+    const diff = totalDebit - totalCredit;
+
+    // عرض الإجماليات
+    const totalsDiv = document.getElementById("clientsTotals");
+    if(totalsDiv){
+        totalsDiv.innerHTML = `
+            <div><strong>إجمالي لك:</strong> ${totalDebit} ريال</div>
+            <div><strong>إجمالي عليك:</strong> ${totalCredit} ريال</div>
+            <div><strong>الفرق:</strong> 
+                ${diff >= 0 ? `لك ${diff}` : `عليك ${Math.abs(diff)}`}
+            </div>
+        `;
+    }
+
     const tbody = document.querySelector("#clientsBalanceTable tbody"); 
     tbody.innerHTML = "";
 
@@ -283,7 +306,6 @@ async function showClientsBalances(){
         `;
         tbody.appendChild(tr);
 
-        // إضافة حدث الحذف مع تأكيد
         tr.querySelector("button").addEventListener("click", async () => {
             if(confirm(`هل تريد حذف العميل "${c.name}" وكل عملياته؟`)){
                 const res = await fetch(API, {
@@ -293,7 +315,7 @@ async function showClientsBalances(){
                 const data = await res.json();
                 if(data.status === "success"){
                     alert("تم حذف العميل وكل عملياته بنجاح");
-                    showClientsBalances(); // إعادة تحميل الجدول
+                    showClientsBalances();
                 } else {
                     alert("حدث خطأ أثناء الحذف");
                 }
