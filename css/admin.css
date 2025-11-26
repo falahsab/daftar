@@ -7,7 +7,7 @@
     --accent: #FFD700;
 }
 
-body { font-family: "Tajawal", sans-serif; background: var(--bg); margin:-13; padding:20px; }
+body { font-family: "Tajawal", sans-serif; background: var(--bg); margin:0; padding:20px; }
 
 .card { max-width: 1000px; margin:auto; background: var(--card-bg); padding:15px; border-radius:15px; box-shadow:0 4px 12px #0002; }
 
@@ -67,15 +67,4 @@ width:50px;
     border-radius: 6px;
     cursor: pointer;
     font-size: 18px;
-}
-/* للجوال */
-@media (max-width: 768px) {
-  body {
-    padding: 10px; /* تصغير البودي للجوال */
-  }
-
-  .card {
-    padding: 10px; /* تصغير الكارد للجوال */
-    width: 95%; /* ليأخذ عرض الشاشة */
-  }
 }
