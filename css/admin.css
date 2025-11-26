@@ -68,3 +68,14 @@ width:50px;
     cursor: pointer;
     font-size: 18px;
 }
+/* للجوال */
+@media (max-width: 768px) {
+  body {
+    padding: 10px; /* تصغير البودي للجوال */
+  }
+
+  .card {
+    padding: 10px; /* تصغير الكارد للجوال */
+    width: 95%; /* ليأخذ عرض الشاشة */
+  }
+}
