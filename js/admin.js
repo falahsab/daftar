@@ -102,52 +102,62 @@ function renderTransactions(transactions){
     const clientMobile = client.mobile || "";
 
     transactions.forEach(t => {
-        const row = table.insertRow();
-        row.onclick = () => openTransModal(t.trans_id);
+    const row = table.insertRow();
+    row.onclick = () => openTransModal(t.trans_id);
 
-        // خلايا الجدول بدون ID واسم العميل
-        const cells = [
-            Math.abs(t.amount),
-            t.type === "debit" ? "عليه" : "له",
-            t.note,
-            new Date(t.date).toLocaleDateString()
-        ];
+    // خلايا الجدول بدون ID واسم العميل
+    const cells = [
+        Math.abs(t.amount),
+        t.type === "debit" ? "عليه" : "له",
+        t.note,
+        new Date(t.date).toLocaleDateString()
+    ];
 
-        cells.forEach((c, i) => {
-            const td = row.insertCell();
-            td.textContent = c;
-            if (i === 0) td.className = t.type === "debit" ? "debit" : "credit"; // تلوين المبلغ
-        });
+    cells.forEach((c, i) => {
+        const td = row.insertCell();
+        td.textContent = c;
+        if (i === 0) td.className = t.type === "debit" ? "debit" : "credit"; // تلوين المبلغ
+    });
 
-        // زر واتساب
-const waCell = row.insertCell();
-const btn = document.createElement("button");
-btn.className = "wa-btn";
-btn.innerHTML = `<img src="${waIcon}"> واتساب`;
+    // زرواتساب وSMS
+const waSmsCell = row.insertCell();
+const groupDiv = document.createElement("div");
+groupDiv.className = "wa-sms-group";
 
-btn.onclick = e => {
+// زر واتساب
+const waBtn = document.createElement("button");
+waBtn.className = "wa-btn";
+waBtn.innerHTML = `<img src="${waIcon}"> واتساب`;
+waBtn.onclick = e => {
     e.stopPropagation();
-
     const total = clientTransactions.reduce((s, x) => s + Number(x.amount), 0);
     const typeText = t.type === "debit" ? "عليك" : "لك";
     const totalText = total >= 0 ? "عليك " + total : "لك " + Math.abs(total);
-
-   const msg = `\u{1F464} *الاخ:* ${clientName}
-\u{1F4B0} *قيد ${typeText} مبلغ:* ${Math.abs(t.amount)} ريال
-\u{1F4DD} *البيان:* ${t.note}
----------------
-\u{1F4CA} صافي حسابك:
-    ${totalText} ريال
-
-\u{2B50} #يمن-ستلايت`;
-    
+    const msg = `الاخ: ${clientName}\n${typeText} ${Math.abs(t.amount)} ريال\nصافي حسابك: ${totalText}`;
     const url = `https://wa.me/${clientMobile}?text=${encodeURIComponent(msg)}`;
     window.open(url, "_blank");
 };
+groupDiv.appendChild(waBtn);
 
-waCell.appendChild(btn);
+// زر SMS
+const smsBtn = document.createElement("button");
+smsBtn.className = "sms-btn";
+smsBtn.textContent = "SMS";
+smsBtn.onclick = e => {
+    e.stopPropagation();
+    const total = clientTransactions.reduce((s,x)=>s+Number(x.amount),0);
+    const totalText = total >=0 ? "عليك " + total : "لك " + Math.abs(total);
+    const typeText = t.type === "debit" ? "عليك" : "لك";
+    const msg = `الاخ: ${clientName}\nقيد ${typeText}: ${Math.abs(t.amount)} \nصافي حسابك: ${totalText}\n #يمن_ستلايت`;
+    const url = `sms:${clientMobile}?body=${encodeURIComponent(msg)}`;
+    window.open(url, "_blank");
+};
+groupDiv.appendChild(smsBtn);
 
-    });
+waSmsCell.appendChild(groupDiv);
+
+});
+
 }
 
 // تعديل وحذف العملية
