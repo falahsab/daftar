@@ -120,14 +120,19 @@ function renderTransactions(transactions){
         });
 
         // زر واتساب
-        const waCell = row.insertCell();
-        const btn = document.createElement("button");
-        btn.className = "wa-btn";
-        btn.innerHTML = `<img src="${waIcon}"> واتساب`;
-        btn.onclick = e => {
-            e.stopPropagation();
-            const total = clientTransactions.reduce((s, x) => s + Number(x.amount), 0);
-            const msg = `\u{1F464} *الاخ:* ${clientName}
+const waCell = row.insertCell();
+const btn = document.createElement("button");
+btn.className = "wa-btn";
+btn.innerHTML = `<img src="${waIcon}"> واتساب`;
+
+btn.onclick = e => {
+    e.stopPropagation();
+
+    const total = clientTransactions.reduce((s, x) => s + Number(x.amount), 0);
+    const typeText = t.type === "debit" ? "عليك" : "لك";
+    const totalText = total >= 0 ? "عليك " + total : "لك " + Math.abs(total);
+
+    const msg = `\u{1F464} *الاخ:* ${clientName}
 \u{1F4B0} *قيد ${typeText} مبلغ:* ${Math.abs(t.amount)} ريال
 \u{1F4DD} *البيان:* ${t.note}
 ---------------
@@ -137,11 +142,15 @@ function renderTransactions(transactions){
       ${totalText} ريال
 
 \u{2B50} #يمن-ستلايت`;
-        };
-        waCell.appendChild(btn);
+
+    const url = `https://wa.me/${clientMobile}?text=${encodeURIComponent(msg)}`;
+    window.open(url, "_blank");
+};
+
+waCell.appendChild(btn);
+
     });
 }
-
 
 // تعديل وحذف العملية
 function openTransModal(id){ currentTransId=id; const t=clientTransactions.find(x=>x.trans_id==id); if(!t) return; qs("modal_amount").value=Math.abs(t.amount); qs("modal_type").value=t.type; qs("modal_note").value=t.note; openModal("transModal"); }
