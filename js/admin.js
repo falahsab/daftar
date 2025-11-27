@@ -133,7 +133,14 @@ waBtn.onclick = e => {
     const total = clientTransactions.reduce((s, x) => s + Number(x.amount), 0);
     const typeText = t.type === "debit" ? "عليك" : "لك";
     const totalText = total >= 0 ? "عليك " + total : "لك " + Math.abs(total);
-    const msg = `الاخ: ${clientName}\n${typeText} ${Math.abs(t.amount)} ريال\nصافي حسابك: ${totalText}`;
+    const msg = `\u{1F464} *الاخ:* ${clientName}
+\u{1F4B0} *قيد ${typeText} مبلغ:* ${Math.abs(t.amount)} ريال
+\u{1F4DD} *البيان:* ${t.note}
+---------------
+\u{1F4CA} صافي حسابك:
+    ${totalText} ريال
+
+\u{2B50} #يمن-ستلايت`;
     const url = `https://wa.me/${clientMobile}?text=${encodeURIComponent(msg)}`;
     window.open(url, "_blank");
 };
