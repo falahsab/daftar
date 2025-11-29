@@ -137,8 +137,8 @@ waBtn.onclick = e => {
 \u{1F4B0} *قيد ${typeText} مبلغ:* ${Math.abs(t.amount)} ريال
 \u{1F4DD} *البيان:* ${t.note}
 ---------------
-\u{1F4CA} صافي حسابك:
-    ${totalText} ريال
+\u{1F4CA} *صافي حسابك:*
+       ${totalText} ريال
 
 \u{2B50} #يمن-ستلايت`;
     const url = `https://wa.me/${clientMobile}?text=${encodeURIComponent(msg)}`;
