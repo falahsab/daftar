@@ -98,7 +98,7 @@ if(localStorage.getItem("role")!=="admin"){ alert("يجب تسجيل الدخو�
 <div style="display:flex;justify-content:space-between;align-items:center;">
     <h2>لوحة الإدارة | يمن ستلايت</h2>
     <div>
-        <button class="refresh-btn" onclick="syncData(true)">🔄 تحديث البيانات</button>
+        <button class="refresh-btn" onclick="syncData(true, true)">🔄 تحديث البيانات</button>
         <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
     </div>
 </div>
@@ -216,7 +216,7 @@ if(localStorage.getItem("role")!=="admin"){ alert("يجب تسجيل الدخو�
 </div>
 
 <script>
-const API = "https://script.google.com/macros/s/AKfycbzcvyP-r8Y600-1K_ZnjF0cwqa2ZeV8YRv3tiOFotHRqiND8LE_TUEUPWCKMnm0OUMP/exec";
+const API = "https://script.google.com/macros/s/AKfycbydO8RtmMKGTl5TSZp15MBkgS1oHq5BrNEOD5cUTcXv-j5NaeH0iPJBbaQotitSKZuv/exec";
 const waIcon = "https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg";
 
 const qs = id => document.getElementById(id);
@@ -228,35 +228,50 @@ let currentDisplayedTrans = [];
 let currentClientId = "";
 let currentTransId = null;
 
+// قفل ضد إغراق السيرفر بالطلبات المتزامنة
+let isSyncing = false;
+let lastSyncTime = 0;
+
 function openModal(id){ qs(id).style.display = "flex"; }
 function closeModal(id){ qs(id).style.display = "none"; }
 window.onclick = e => { if(e.target.classList.contains("modal")) e.target.style.display = "none"; };
 function logout(){ localStorage.clear(); window.location.href = "index.html"; }
 
 // ============================================================
-// 1. التحميل الفوري عبر GET السريع والخفيف (15KB فقط)
+// 1. التشغيل الفوري والتحميل المستقر (0ms)
 // ============================================================
 document.addEventListener("DOMContentLoaded", () => {
-    // عرض فوري من كاش المتصفح (0ms)
-    const cached = localStorage.getItem("yemen_sat_cache_v4");
+    // قراءة البيانات من الكاش المحلي وعرضها فوراً (0 ثانية)
+    const cached = localStorage.getItem("yemen_sat_cache_v5");
     if (cached) {
         try {
             renderDashboard(JSON.parse(cached));
         } catch(e){}
     }
-    syncData(!cached);
+
+    // مزامنة في الخلفية بهدوء بعد ثانية واحدة لمنع تداخل تشغيل المتصفح
+    setTimeout(() => {
+        syncData(!cached, false);
+    }, 800);
 });
 
-async function syncData(showIndicator = true) {
-    if (showIndicator) qs("loading").textContent = "جاري تحديث البيانات السريعة...";
+async function syncData(showIndicator = true, force = false) {
+    // منع الطلبات المتزامنة المتكررة (قفل ذكي)
+    const now = Date.now();
+    if (isSyncing) return;
+    if (!force && (now - lastSyncTime < 15000)) return; // لا تكرر الطلب إلا كل 15 ثانية على الأقل
+
+    isSyncing = true;
+    if (showIndicator) qs("loading").textContent = "جاري التحديث...";
 
     try {
-        // استخدام GET السريع مع منع التخزين المؤقت العشوائي
-        const res = await fetch(`${API}?action=getDashboardData&_t=${Date.now()}`);
+        const url = `${API}?action=getDashboardData${force ? "&forceRefresh=true" : ""}&_t=${now}`;
+        const res = await fetch(url);
         const data = await res.json();
 
-        if (data && data.status === "success") {
-            localStorage.setItem("yemen_sat_cache_v4", JSON.stringify(data));
+        if (data && data.status === "success" && data.clients && data.balances) {
+            lastSyncTime = Date.now();
+            localStorage.setItem("yemen_sat_cache_v5", JSON.stringify(data));
             renderDashboard(data);
             if (showIndicator) {
                 qs("loading").textContent = "تم التحديث بنجاح ✔";
@@ -265,17 +280,25 @@ async function syncData(showIndicator = true) {
         }
     } catch(err) {
         console.warn("Sync error:", err);
-        if (showIndicator) qs("loading").textContent = "تعذر الاتصال";
+        if (showIndicator) {
+            qs("loading").textContent = "الاتصال بطيء، تم استخدام البيانات المحلية";
+            setTimeout(() => qs("loading").textContent = "", 2500);
+        }
     } finally {
+        isSyncing = false;
         if (!showIndicator) qs("loading").textContent = "";
     }
 }
 
+// ============================================================
+// دالة العرض مع الحساب الذاتي الفوري للإجماليات (مستحيل تتأخر!)
+// ============================================================
 function renderDashboard(data) {
     allClients = data.clients || [];
     allBalances = data.balances || [];
     clientRecentMap = data.recentMap || {};
 
+    // 1. تعبئة القائمة المنسدلة
     const select = qs("client_select");
     const currentVal = select.value;
     select.innerHTML = `<option value="">اختر العميل</option>`;
@@ -291,28 +314,38 @@ function renderDashboard(data) {
         select.value = currentVal;
     }
 
-    if (data.stats) {
-        qs("stat_clients").textContent = `👥 العملاء: ${allClients.length}`;
-        const net = data.stats.netTotal || 0;
-        const color = net >= 0 ? "red" : "green";
-        const label = net >= 0 ? `عليه ${net.toLocaleString()}` : `له ${Math.abs(net).toLocaleString()}`;
-        qs("stat_total").innerHTML = `💰 صافي الحساب: <span style="color:${color}">${label}</span>`;
+    // 2. حساب الإجماليات محلياً فوراً (0ms) لضمان ظهورها بدون أي انتظار!
+    qs("stat_clients").textContent = `👥 العملاء: ${allClients.length}`;
 
-        if (data.stats.lastTransDate) {
-            const d = new Date(data.stats.lastTransDate);
-            qs("stat_last").textContent = `⏱️ آخر عملية: ${d.toLocaleDateString('ar-YE')}`;
-        } else {
-            qs("stat_last").textContent = "لا عمليات";
-        }
+    let totalDebit = 0;
+    let totalCredit = 0;
+
+    allBalances.forEach(c => {
+        const amt = Number(c.total) || 0;
+        if (amt >= 0) totalDebit += amt;
+        else totalCredit += Math.abs(amt);
+    });
+
+    const net = totalDebit - totalCredit;
+    const color = net >= 0 ? "red" : "green";
+    const label = net >= 0 ? `عليه ${net.toLocaleString()}` : `له ${Math.abs(net).toLocaleString()}`;
+    qs("stat_total").innerHTML = `💰 صافي الحساب: <span style="color:${color}">${label}</span>`;
+
+    if (data.lastTrans && data.lastTrans.date) {
+        const d = new Date(data.lastTrans.date);
+        qs("stat_last").textContent = `⏱️ آخر عملية: ${d.toLocaleDateString('ar-YE')}`;
+    } else {
+        qs("stat_last").textContent = "جاهز";
     }
 
+    // تحديث العميل المختار إن وجد
     if (select.value) {
         onClientChange();
     }
 }
 
 // ============================================================
-// 2. اختيار العميل اللحظي (0 ثانية وبدون أي انتظار!)
+// 2. اختيار العميل اللحظي (0 ثانية وبدون أي طلب سيرفر نهائياً!)
 // ============================================================
 qs("client_select").addEventListener("change", onClientChange);
 
@@ -324,7 +357,7 @@ function onClientChange() {
         return;
     }
 
-    // رصيد العميل فوراً من الذاكرة
+    // احتساب رصيد العميل فوراً من الذاكرة المحلية
     const balObj = allBalances.find(b => String(b.client_id) === String(currentClientId));
     const total = balObj ? balObj.total : 0;
 
@@ -332,7 +365,7 @@ function onClientChange() {
         ? `<b style="color:red;font-size:1.1rem;">إجمالي الرصيد: عليه ${total.toLocaleString()} ريال</b>`
         : `<b style="color:green;font-size:1.1rem;">إجمالي الرصيد: له ${Math.abs(total).toLocaleString()} ريال</b>`;
 
-    // العمليات الثلاث الأخيرة تظهر في 0ms
+    // عرض العمليات الثلاث الأخيرة فوراً في 0 ثانية
     const recent = clientRecentMap[String(currentClientId)] || [];
     currentDisplayedTrans = recent;
     renderTransactions(recent);
@@ -351,7 +384,7 @@ async function showAllTransactions() {
             renderTransactions(data.list);
         }
     } catch(e) {
-        alert("تعذر جلب العمليات");
+        alert("تعذر جلب العمليات، تحقق من الاتصال");
     } finally {
         qs("loading").textContent = "";
     }
@@ -394,7 +427,7 @@ function renderTransactions(transactions) {
             if (i === 0) td.className = t.type === "debit" ? "debit" : "credit";
         });
 
-        // واتساب و SMS
+        // أزرار واتساب و SMS
         const waSmsCell = row.insertCell();
         const groupDiv = document.createElement("div");
         groupDiv.className = "wa-sms-group";
@@ -466,7 +499,7 @@ async function addTrans() {
             msg.style.color = "green";
             qs("amount").value = "";
             qs("note").value = "";
-            await syncData(false);
+            await syncData(false, true);
             onClientChange();
             setTimeout(() => msg.textContent="", 2000);
         } else {
@@ -506,7 +539,7 @@ async function addClient() {
             qs("new_mobile").value = "";
             qs("new_username").value = "";
             qs("new_password").value = "";
-            await syncData(false);
+            await syncData(false, true);
             setTimeout(() => closeModal("addClientModal"), 600);
         } else {
             msg.textContent = "حدث خطأ أثناء الإضافة";
@@ -541,7 +574,7 @@ async function saveTransModal() {
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({ action: "updateTransaction", trans_id: currentTransId, amount, type, note })
     });
-    await syncData(false);
+    await syncData(false, true);
     onClientChange();
 }
 
@@ -553,7 +586,7 @@ async function deleteTransModal() {
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify({ action: "deleteTransaction", trans_id: currentTransId })
     });
-    await syncData(false);
+    await syncData(false, true);
     onClientChange();
 }
 
@@ -633,7 +666,7 @@ async function deleteClient(client_id, name) {
     const data = await res.json();
     if(data.status === "success"){
         alert("تم حذف العميل بنجاح");
-        await syncData(false);
+        await syncData(false, true);
         showClientsBalances();
     } else {
         alert("حدث خطأ أثناء الحذف");
