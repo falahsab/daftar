@@ -56,18 +56,8 @@ th { background: var(--secondary); color:white; }
 
 .wa-btn { background:#25D366;color:white;border:none;padding:6px 12px;border-radius:6px;display:flex;align-items:center;justify-content:center;gap:4px; }
 .wa-btn img { width:16px; height:16px; vertical-align:middle; }
-.input-group {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.input-group input {
-    flex: 1;
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-}
+.input-group { display: flex; align-items: center; gap: 6px; }
+.input-group input { flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 6px; }
 
 .pick-btn {
     width:50px;
@@ -80,40 +70,16 @@ th { background: var(--secondary); color:white; }
     font-size: 18px;
 }
 
-/* للجوال */
 @media (max-width: 768px) {
-  .card {
-    margin: 5px;
-    padding: 10px;
-    width: auto;
-    border-radius: 8px;
-  }
-  body {
-    padding: 5px;
-  }
+  .card { margin: 5px; padding: 10px; width: auto; border-radius: 8px; }
+  body { padding: 5px; }
 }
 
-.wa-sms-group {
-    display: flex;
-    gap: 6px;
-    justify-content: center;
-}
-
+.wa-sms-group { display: flex; gap: 6px; justify-content: center; }
 .wa-sms-group button {
-    flex: 1;
-    padding: 6px 8px;
-    border: none;
-    border-radius: 6px;
-    color: white;
-    cursor: pointer;
-    font-size: 0.85rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    transition: 0.2s;
+    flex: 1; padding: 6px 8px; border: none; border-radius: 6px; color: white; cursor: pointer;
+    font-size: 0.85rem; display: flex; align-items: center; justify-content: center; gap: 4px; transition: 0.2s;
 }
-
 .wa-sms-group .wa-btn { background: #25D366; }
 .wa-sms-group .wa-btn:hover { background: #1ebe57; }
 .wa-sms-group .sms-btn { background: #3b82f6; }
@@ -157,12 +123,7 @@ if(localStorage.getItem("role")!=="admin"){ alert("يجب تسجيل الدخو�
 <input type="text" style="display:none" autocomplete="username">
 <input type="password" style="display:none" autocomplete="new-password">
 
-<input id="note" name="field987" placeholder="البيان"
-       autocomplete="off"
-       autofill="off"
-       data-lpignore="true"
-       autocapitalize="off"
-       spellcheck="false">
+<input id="note" name="field987" placeholder="البيان" autocomplete="off" autofill="off" data-lpignore="true" autocapitalize="off" spellcheck="false">
 <button id="addTransBtn" type="button" onclick="addTrans()">إضافة العملية</button>
 
 <p id="msg"></p>
@@ -245,18 +206,9 @@ if(localStorage.getItem("role")!=="admin"){ alert("يجب تسجيل الدخو�
 </div>
 
 <div id="numberPopup" style="
-    position: fixed;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    background: white;
-    padding: 15px;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.2);
-    display: none;
-    z-index: 9999;
-    width: 250px;
-    text-align: center;
+    position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    background: white; padding: 15px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    display: none; z-index: 9999; width: 250px; text-align: center;
 ">
     <h3 style="margin:0 0 10px;">اختر الرقم</h3>
     <div id="numbersList"></div>
@@ -264,80 +216,70 @@ if(localStorage.getItem("role")!=="admin"){ alert("يجب تسجيل الدخو�
 </div>
 
 <script>
-const API = "https://script.google.com/macros/s/AKfycbyb_XLsiYWY2v-2-ifH0_sepB8S3MXOwflRR-NYQA_nTZ44ZiTlxU331CB091dcMqsw/exec";
+const API = "https://script.google.com/macros/s/AKfycbzcvyP-r8Y600-1K_ZnjF0cwqa2ZeV8YRv3tiOFotHRqiND8LE_TUEUPWCKMnm0OUMP/exec";
 const waIcon = "https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg";
 
 const qs = id => document.getElementById(id);
 
-// المتغيرات المحلية المخزنة للسرعة الفائقة (0ms)
 let allClients = [];
-let allTransactions = [];
 let allBalances = [];
+let clientRecentMap = {};
+let currentDisplayedTrans = [];
 let currentClientId = "";
 let currentTransId = null;
 
-// فتح وإغلاق المودالات
 function openModal(id){ qs(id).style.display = "flex"; }
 function closeModal(id){ qs(id).style.display = "none"; }
 window.onclick = e => { if(e.target.classList.contains("modal")) e.target.style.display = "none"; };
-
-// تسجيل خروج
 function logout(){ localStorage.clear(); window.location.href = "index.html"; }
 
 // ============================================================
-// 1. التشغيل الفوري والتحميل من الكاش المحلي (Instant Boot 0ms)
+// 1. التحميل الفوري عبر GET السريع والخفيف (15KB فقط)
 // ============================================================
 document.addEventListener("DOMContentLoaded", () => {
-    // قراءة البيانات من الكاش المحلي فوراً (0 ثانية)
-    const cached = localStorage.getItem("yemen_sat_cache");
+    // عرض فوري من كاش المتصفح (0ms)
+    const cached = localStorage.getItem("yemen_sat_cache_v4");
     if (cached) {
         try {
-            renderDashboardFromData(JSON.parse(cached));
+            renderDashboard(JSON.parse(cached));
         } catch(e){}
     }
-
-    // مزامنة السيرفر بهدوء في الخلفية
-    syncData(false);
+    syncData(!cached);
 });
 
-async function syncData(showSpinner = true) {
-    if (showSpinner) qs("loading").textContent = "جاري تحديث البيانات...";
+async function syncData(showIndicator = true) {
+    if (showIndicator) qs("loading").textContent = "جاري تحديث البيانات السريعة...";
 
     try {
-        const res = await fetch(API, {
-            method: "POST",
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({ action: "getDashboardData" })
-        });
+        // استخدام GET السريع مع منع التخزين المؤقت العشوائي
+        const res = await fetch(`${API}?action=getDashboardData&_t=${Date.now()}`);
         const data = await res.json();
-        
+
         if (data && data.status === "success") {
-            // حفظ نسخة محلية للمرات القادمة
-            localStorage.setItem("yemen_sat_cache", JSON.stringify(data));
-            renderDashboardFromData(data);
-            if (showSpinner) {
+            localStorage.setItem("yemen_sat_cache_v4", JSON.stringify(data));
+            renderDashboard(data);
+            if (showIndicator) {
                 qs("loading").textContent = "تم التحديث بنجاح ✔";
-                setTimeout(() => qs("loading").textContent = "", 1500);
+                setTimeout(() => qs("loading").textContent = "", 1200);
             }
         }
-    } catch (err) {
+    } catch(err) {
         console.warn("Sync error:", err);
-        if (showSpinner) qs("loading").textContent = "تعذر الاتصال بالسيرفر";
+        if (showIndicator) qs("loading").textContent = "تعذر الاتصال";
     } finally {
-        if (!showSpinner) qs("loading").textContent = "";
+        if (!showIndicator) qs("loading").textContent = "";
     }
 }
 
-function renderDashboardFromData(data) {
+function renderDashboard(data) {
     allClients = data.clients || [];
-    allTransactions = data.transactions || [];
     allBalances = data.balances || [];
+    clientRecentMap = data.recentMap || {};
 
-    // تعبئة القائمة المنسدلة فوراً
     const select = qs("client_select");
-    const previousVal = select.value;
+    const currentVal = select.value;
     select.innerHTML = `<option value="">اختر العميل</option>`;
-    
+
     allClients.forEach(c => {
         const op = document.createElement("option");
         op.value = c.client_id;
@@ -345,11 +287,10 @@ function renderDashboardFromData(data) {
         select.appendChild(op);
     });
 
-    if (previousVal && allClients.some(c => String(c.client_id) === String(previousVal))) {
-        select.value = previousVal;
+    if (currentVal && allClients.some(c => String(c.client_id) === String(currentVal))) {
+        select.value = currentVal;
     }
 
-    // تحديث الإحصائيات العامة
     if (data.stats) {
         qs("stat_clients").textContent = `👥 العملاء: ${allClients.length}`;
         const net = data.stats.netTotal || 0;
@@ -365,14 +306,13 @@ function renderDashboardFromData(data) {
         }
     }
 
-    // إذا كان هناك عميل محدد نعرض بياناته فوراً
     if (select.value) {
         onClientChange();
     }
 }
 
 // ============================================================
-// 2. اختيار العميل اللحظي (0 ثانية - بدون أي اتصال بالسيرفر!)
+// 2. اختيار العميل اللحظي (0 ثانية وبدون أي انتظار!)
 // ============================================================
 qs("client_select").addEventListener("change", onClientChange);
 
@@ -384,24 +324,37 @@ function onClientChange() {
         return;
     }
 
-    // تصفية العمليات فوراً من الذاكرة المحلية (0ms)
-    const clientTrans = allTransactions.filter(t => String(t.client_id) === String(currentClientId));
-    
-    // احتساب الصافي فوراً
+    // رصيد العميل فوراً من الذاكرة
     const balObj = allBalances.find(b => String(b.client_id) === String(currentClientId));
-    const total = balObj ? balObj.total : clientTrans.reduce((s, x) => s + Number(x.amount), 0);
+    const total = balObj ? balObj.total : 0;
 
     qs("total_info").innerHTML = total >= 0 
         ? `<b style="color:red;font-size:1.1rem;">إجمالي الرصيد: عليه ${total.toLocaleString()} ريال</b>`
         : `<b style="color:green;font-size:1.1rem;">إجمالي الرصيد: له ${Math.abs(total).toLocaleString()} ريال</b>`;
 
-    renderTransactions(clientTrans.slice(0, 3));
+    // العمليات الثلاث الأخيرة تظهر في 0ms
+    const recent = clientRecentMap[String(currentClientId)] || [];
+    currentDisplayedTrans = recent;
+    renderTransactions(recent);
 }
 
-function showAllTransactions() {
+// جلب كافة العمليات للعميل عند الطلب فقط
+async function showAllTransactions() {
     if (!currentClientId) return alert("يرجى اختيار العميل أولاً");
-    const clientTrans = allTransactions.filter(t => String(t.client_id) === String(currentClientId));
-    renderTransactions(clientTrans);
+    
+    qs("loading").textContent = "جاري جلب كامل العمليات للعميل...";
+    try {
+        const res = await fetch(`${API}?action=getClientAllTransactions&client_id=${currentClientId}&_t=${Date.now()}`);
+        const data = await res.json();
+        if (data && data.list) {
+            currentDisplayedTrans = data.list;
+            renderTransactions(data.list);
+        }
+    } catch(e) {
+        alert("تعذر جلب العمليات");
+    } finally {
+        qs("loading").textContent = "";
+    }
 }
 
 function renderTransactions(transactions) {
@@ -421,8 +374,8 @@ function renderTransactions(transactions) {
     const clientName = client.name || "";
     const clientMobile = client.mobile || "";
 
-    const clientTransAll = allTransactions.filter(t => String(t.client_id) === String(currentClientId));
-    const total = clientTransAll.reduce((s, x) => s + Number(x.amount), 0);
+    const balObj = allBalances.find(b => String(b.client_id) === String(currentClientId));
+    const total = balObj ? balObj.total : 0;
 
     transactions.forEach(t => {
         const row = table.insertRow();
@@ -482,7 +435,7 @@ function renderTransactions(transactions) {
 }
 
 // ============================================================
-// 3. إضافة العملية والعميل مع التحديث اللحظي
+// 3. إضافة وتعديل العمليات والعملاء
 // ============================================================
 async function addTrans() {
     const client_id = qs("client_select").value;
@@ -513,7 +466,6 @@ async function addTrans() {
             msg.style.color = "green";
             qs("amount").value = "";
             qs("note").value = "";
-            // مزامنة فورية
             await syncData(false);
             onClientChange();
             setTimeout(() => msg.textContent="", 2000);
@@ -566,12 +518,9 @@ async function addClient() {
     }
 }
 
-// ============================================================
-// 4. تعديل وحذف العملية
-// ============================================================
 function openTransModal(id) {
     currentTransId = id;
-    const t = allTransactions.find(x => String(x.trans_id) === String(id));
+    const t = currentDisplayedTrans.find(x => String(x.trans_id) === String(id));
     if(!t) return;
     qs("modal_amount").value = Math.abs(t.amount);
     qs("modal_type").value = t.type;
@@ -609,7 +558,7 @@ async function deleteTransModal() {
 }
 
 // ============================================================
-// 5. عرض العملاء وصافي الحسابات اللحظي (0 ثانية!)
+// 4. عرض قائمة العملاء وصافي الحسابات اللحظي (0 ثانية!)
 // ============================================================
 function showClientsBalances() {
     renderBalancesModal(allBalances);
@@ -692,15 +641,15 @@ async function deleteClient(client_id, name) {
 }
 
 // ============================================================
-// 6. الطباعة
+// 5. الطباعة
 // ============================================================
 function printTransactions() {
-    const clientTrans = allTransactions.filter(t => String(t.client_id) === String(currentClientId));
-    if (!clientTrans.length) return alert("لا توجد عمليات للطباعة");
+    if (!currentDisplayedTrans.length) return alert("لا توجد عمليات للطباعة");
 
     const client = allClients.find(c => String(c.client_id) === String(currentClientId)) || {};
     const clientName = client.name || "";
-    const total = clientTrans.reduce((s, x) => s + Number(x.amount), 0);
+    const balObj = allBalances.find(b => String(b.client_id) === String(currentClientId));
+    const total = balObj ? balObj.total : 0;
 
     const companyName = "شركة يمن ستلايت";
     const companyPhone = "738092209";
@@ -756,7 +705,7 @@ function printTransactions() {
                 </tr>
             </thead>
             <tbody>
-                ${clientTrans.map(t => {
+                ${currentDisplayedTrans.map(t => {
                     const date = new Date(t.date);
                     const formattedDate = `${date.getDate()}/${date.getMonth()+1}/${date.getFullYear()}`;
                     return `
@@ -799,7 +748,6 @@ function printClientsList() {
 
     const companyName = "شركة يمن ستلايت";
     const companyPhone = "738092209";
-    const logoUrl = "";
 
     const html = `
     <html lang="ar" dir="rtl">
@@ -830,12 +778,10 @@ function printClientsList() {
     </head>
     <body>
         <header>
-            ${logoUrl ? `<img src="${logoUrl}" alt="Logo">` : '<div style="width:60px;"></div>'}
             <div class="report-info">
                 <h2>قائمة العملاء وصافي الحساب</h2>
                 <p>عدد العملاء: ${rows.length}</p>
             </div>
-            <div style="width:60px;"></div>
         </header>
 
         <table>
@@ -876,11 +822,9 @@ function printClientsList() {
 }
 
 // ============================================================
-// 7. جهات الاتصال (Contact Picker)
+// 6. جهات الاتصال (Contact Picker)
 // ============================================================
-function closePopup() {
-    qs("numberPopup").style.display = "none";
-}
+function closePopup() { qs("numberPopup").style.display = "none"; }
 
 qs("pickContact").addEventListener("click", async () => {
     if (!("contacts" in navigator && "select" in navigator.contacts)) {
