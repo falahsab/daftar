@@ -5,7 +5,128 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>لوحة الإدارة | يمن ستلايت</title>
 
-<link rel="stylesheet" href="css/admin.css">
+<style>
+:root {
+    --primary: #00693B; 
+    --secondary: #00A651; 
+    --bg: #F5F5F5;
+    --card-bg: #FFFFFF;
+    --text: #0F172A;
+    --accent: #FFD700;
+}
+
+body { font-family: "Tajawal", sans-serif; background: var(--bg); margin:0; padding:20px; }
+
+.card { max-width: 1000px; margin:auto; background: var(--card-bg); padding:25px; border-radius:15px; box-shadow:0 4px 12px #0002; }
+
+h2,h3{ margin:12px 0; color: var(--primary); }
+
+input, select, button { width: 100%; padding:12px; margin-top:10px; border:1px solid #d1d5db; border-radius:8px; font-size:1rem; box-sizing:border-box; }
+
+button { background: var(--primary); color:white; border:none; cursor:pointer; transition:0.3s; }
+button:hover { background: var(--secondary); }
+
+.logout-btn { background:#EF4444; width:auto; padding:10px 20px; }
+.logout-btn:hover { background:#DC2626; }
+
+.table-container { overflow-x:auto; margin-top:20px; }
+
+table { width:100%; border-collapse:collapse; font-size:0.95rem; }
+
+th, td { border-bottom:1px solid #e5e7eb; padding:8px; text-align:center; }
+
+th { background: var(--secondary); color:white; }
+.debit { color:red; font-weight:bold; }
+.credit { color:green; font-weight:bold; }
+
+.modal { display:none; position:fixed; z-index:200; left:0; top:0; width:100%; height:100%; background-color:rgba(0,0,0,0.4); justify-content:center; align-items:center; }
+
+.modal-content { background:#fff; margin:auto; padding:20px; border-radius:10px; width:90%; max-width:420px; animation:fadeIn 0.25s ease; }
+@keyframes fadeIn { from{ opacity:0; transform:scale(.9); } to{ opacity:1; } }
+
+.close { color:#555; font-size:28px; cursor:pointer; float:left; }
+.close:hover{ color:#000; }
+
+#clientsModal .modal-body { background:#fff; padding:18px; border-radius:10px; width:90%; max-width:900px; max-height:80vh; overflow:auto; }
+
+.stat-box { background:white; padding:15px; border-radius:10px; box-shadow:0 2px 5px #0001; text-align:center; flex:1; font-weight:bold; }
+
+.wa-btn { background:#25D366;color:white;border:none;padding:6px 12px;border-radius:6px;display:flex;align-items:center;justify-content:center;gap:4px; }
+.wa-btn img { width:16px; height:16px; vertical-align:middle; }
+.input-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.input-group input {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+.pick-btn {
+    width:50px;
+    border: none;
+    background: #28a745;
+    color: white;
+    padding: 8px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+/* للجوال */
+@media (max-width: 768px) {
+  .card {
+    margin: 5px;
+    padding: 10px;
+    width: auto;
+    border-radius: 8px;
+  }
+  body {
+    padding: 5px;
+  }
+}
+
+.wa-sms-group {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+}
+
+.wa-sms-group button {
+    flex: 1;
+    padding: 6px 8px;
+    border: none;
+    border-radius: 6px;
+    color: white;
+    cursor: pointer;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    transition: 0.2s;
+}
+
+.wa-sms-group .wa-btn {
+    background: #25D366;
+}
+
+.wa-sms-group .wa-btn:hover {
+    background: #1ebe57;
+}
+
+.wa-sms-group .sms-btn {
+    background: #3b82f6;
+}
+
+.wa-sms-group .sms-btn:hover {
+    background: #2563eb;
+}
+</style>
 </head>
 
 <body>
@@ -20,9 +141,9 @@ if(localStorage.getItem("role")!=="admin"){ alert("يجب تسجيل الدخو�
 <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
 
 <div style="display:flex;gap:10px;margin:15px 0;">
-    <div class="stat-box" id="stat_clients">جاري التحميل...</div>
-    <div class="stat-box" id="stat_total">---</div>
-    <div class="stat-box" id="stat_last">---</div>
+    <div class="stat-box" id="stat_clients">👥 العملاء: ---</div>
+    <div class="stat-box" id="stat_total">💰 صافي الحساب: ---</div>
+    <div class="stat-box" id="stat_last">⏱️ آخر عملية: ---</div>
 </div>
 <button type="button" onclick="openModal('addClientModal')">إضافة عميل جديد</button>
 <h3>إضافة عملية مالية</h3>
@@ -30,7 +151,6 @@ if(localStorage.getItem("role")!=="admin"){ alert("يجب تسجيل الدخو�
 <select id="client_select">
     <option value="">اختر العميل</option>
 </select>
-
 
 <input id="amount" type="number" placeholder="المبلغ">
 <select id="type">
@@ -63,7 +183,6 @@ if(localStorage.getItem("role")!=="admin"){ alert("يجب تسجيل الدخو�
 
 <button onclick="showClientsBalances()" style="background:#0b74de">عرض جميع العملاء وصافي حساباتهم</button>
 
-
 </div>
 
 <!-- مودال إضافة العميل -->
@@ -72,12 +191,10 @@ if(localStorage.getItem("role")!=="admin"){ alert("يجب تسجيل الدخو�
     <span class="close" onclick="closeModal('addClientModal')">&times;</span>
     <h3>إضافة عميل جديد</h3>
     <input id="new_name" placeholder="الاسم">
- <div class="input-group">
-    <input id="new_mobile" type="tel" placeholder="رقم الجوال">
-
-    <button class="pick-btn" id="pickContact">📱</button>
-</div>
-
+    <div class="input-group">
+        <input id="new_mobile" type="tel" placeholder="رقم الجوال">
+        <button class="pick-btn" id="pickContact">📱</button>
+    </div>
     <input id="new_username" placeholder="اسم المستخدم">
     <input id="new_password" type="password" placeholder="كلمة المرور">
     <button onclick="addClient()">إضافة العميل</button>
@@ -126,10 +243,8 @@ if(localStorage.getItem("role")!=="admin"){ alert("يجب تسجيل الدخو�
         <tbody></tbody>
       </table>
       <button onclick="printClientsList()" style="background:#0b74de; color:white; margin-top:10px;">طباعة قائمة العملاء</button>
-<div id="clientsTotals" style="padding:10px;font-size:18px;font-weight:bold;color:#00693B"></div>
-
+      <div id="clientsTotals" style="padding:10px;font-size:18px;font-weight:bold;color:#00693B"></div>
   </div>
-  
 </div>
 
 <div id="numberPopup" style="
@@ -150,16 +265,654 @@ if(localStorage.getItem("role")!=="admin"){ alert("يجب تسجيل الدخو�
     <div id="numbersList"></div>
     <button onclick="closePopup()" style="margin-top:10px;padding:6px 10px;">إلغاء</button>
 </div>
-<script src="js/admin.js"></script>
+
+<script>
+const API = "https://script.google.com/macros/s/AKfycbyb_XLsiYWY2v-2-ifH0_sepB8S3MXOwflRR-NYQA_nTZ44ZiTlxU331CB091dcMqsw/exec";
+const waIcon = "https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg";
+
+const qs = id => document.getElementById(id);
+
+// البيانات المحفوظة في الذاكرة للوصول الفوري (0ms)
+let allClients = [];
+let allTransactions = [];
+let allBalances = [];
+let currentClientId = "";
+let currentTransId = null;
+
+// المودالات
+function openModal(id){ qs(id).style.display = "flex"; }
+function closeModal(id){ qs(id).style.display = "none"; }
+window.onclick = e => { if(e.target.classList.contains("modal")) e.target.style.display="none"; };
+
+// تسجيل خروج
+function logout(){ localStorage.clear(); window.location.href="index.html"; }
+
+// ============================================================
+// التحميل الفوري (Instant Data Loading)
+// ============================================================
+async function initDashboard(forceRefresh = false) {
+    // 1. فتح فوري من الكاش المحلي إن وجد
+    const cached = localStorage.getItem("yemen_sat_cache");
+    if (cached) {
+        try {
+            renderFullDashboard(JSON.parse(cached));
+        } catch(e){}
+    }
+
+    // 2. المزامنة السريعة في الخلفية من السيرفر
+    if (!cached || forceRefresh) {
+        if (!allClients.length) qs("loading").textContent = "جاري المزامنة السريعة...";
+    }
+
+    try {
+        const res = await fetch(API, {
+            method: "POST",
+            body: JSON.stringify({ action: "getDashboardData", forceRefresh })
+        });
+        const data = await res.json();
+        if (data && data.status === "success") {
+            localStorage.setItem("yemen_sat_cache", JSON.stringify(data));
+            renderFullDashboard(data);
+        }
+    } catch(err) {
+        console.error("Sync error:", err);
+    } finally {
+        qs("loading").textContent = "";
+    }
+}
+
+function renderFullDashboard(data) {
+    allClients = data.clients || [];
+    allTransactions = data.transactions || [];
+    allBalances = data.balances || [];
+
+    // تحديث القائمة المنسدلة للعملاء
+    const select = qs("client_select");
+    const selectedBefore = select.value;
+    select.innerHTML = `<option value="">اختر العميل</option>`;
+    allClients.forEach(c => {
+        const op = document.createElement("option");
+        op.value = c.client_id;
+        op.textContent = `${c.name} (${c.mobile || "بدون جوال"})`;
+        select.appendChild(op);
+    });
+    if (selectedBefore && allClients.some(c => String(c.client_id) === String(selectedBefore))) {
+        select.value = selectedBefore;
+    }
+
+    // تحديث الإحصائيات العامة
+    updateGeneralStats(data.stats);
+
+    // إذا كان هناك عميل محدد، نعرض عملياته فوراً
+    if (select.value) {
+        onClientSelected();
+    }
+}
+
+function updateGeneralStats(stats) {
+    qs("stat_clients").textContent = `👥 العملاء: ${allClients.length}`;
+    
+    if (stats) {
+        const net = stats.netTotal || 0;
+        const color = net >= 0 ? "red" : "green";
+        const label = net >= 0 ? `عليه ${net.toLocaleString()}` : `له ${Math.abs(net).toLocaleString()}`;
+        qs("stat_total").innerHTML = `💰 صافي الحساب: <span style="color:${color}">${label}</span>`;
+
+        if (stats.lastTransDate) {
+            const d = new Date(stats.lastTransDate);
+            qs("stat_last").textContent = `⏱️ آخر عملية: ${d.toLocaleDateString('ar-YE')}`;
+        } else {
+            qs("stat_last").textContent = "لا عمليات";
+        }
+    }
+}
+
+// ============================================================
+// اختيار العميل الفوري (Instant Client Selection 0ms بدون انتظار)
+// ============================================================
+function onClientSelected() {
+    currentClientId = qs("client_select").value;
+    if (!currentClientId) {
+        qs("total_info").textContent = "";
+        qs("transTable").innerHTML = "";
+        return;
+    }
+
+    // جلب العمليات فوراً من الذاكرة المحلية وتصفيتها
+    const clientTrans = allTransactions.filter(t => String(t.client_id) === String(currentClientId));
+    
+    // حساب الرصيد فوراً
+    const balObj = allBalances.find(b => String(b.client_id) === String(currentClientId));
+    const total = balObj ? balObj.total : clientTrans.reduce((s, x) => s + Number(x.amount), 0);
+
+    qs("total_info").textContent = total >= 0 
+        ? `إجمالي الرصيد: عليه ${total.toLocaleString()} ريال`
+        : `إجمالي الرصيد: له ${Math.abs(total).toLocaleString()} ريال`;
+
+    renderTransactions(clientTrans.slice(0, 3));
+}
+
+// عرض كل العمليات للعميل المختار
+function showAllTransactions() {
+    if (!currentClientId) return alert("اختر العميل أولاً");
+    const clientTrans = allTransactions.filter(t => String(t.client_id) === String(currentClientId));
+    renderTransactions(clientTrans);
+}
+
+// جدول العمليات
+function renderTransactions(transactions) {
+    const table = qs("transTable");
+    table.innerHTML = "";
+
+    const header = ["المبلغ", "النوع", "البيان", "التاريخ", "واتساب"];
+    const trH = document.createElement("tr");
+    header.forEach(h => {
+        const th = document.createElement("th");
+        th.textContent = h;
+        trH.appendChild(th);
+    });
+    table.appendChild(trH);
+
+    const client = allClients.find(c => String(c.client_id) === String(currentClientId)) || {};
+    const clientName = client.name || "";
+    const clientMobile = client.mobile || "";
+
+    const clientTransAll = allTransactions.filter(t => String(t.client_id) === String(currentClientId));
+    const total = clientTransAll.reduce((s, x) => s + Number(x.amount), 0);
+
+    transactions.forEach(t => {
+        const row = table.insertRow();
+        row.onclick = () => openTransModal(t.trans_id);
+
+        const cells = [
+            Math.abs(t.amount).toLocaleString(),
+            t.type === "debit" ? "عليه" : "له",
+            t.note,
+            new Date(t.date).toLocaleDateString('ar-YE')
+        ];
+
+        cells.forEach((c, i) => {
+            const td = row.insertCell();
+            td.textContent = c;
+            if (i === 0) td.className = t.type === "debit" ? "debit" : "credit";
+        });
+
+        // أزرار واتساب و SMS
+        const waSmsCell = row.insertCell();
+        const groupDiv = document.createElement("div");
+        groupDiv.className = "wa-sms-group";
+
+        // زر واتساب
+        const waBtn = document.createElement("button");
+        waBtn.className = "wa-btn";
+        waBtn.innerHTML = `<img src="${waIcon}"> واتساب`;
+        waBtn.onclick = e => {
+            e.stopPropagation();
+            const typeText = t.type === "debit" ? "عليك" : "لك";
+            const totalText = total >= 0 ? "عليك " + total : "لك " + Math.abs(total);
+            const msg = `👤 *الاخ:* ${clientName}
+💰 *قيد ${typeText} مبلغ:* ${Math.abs(t.amount)} ريال
+📝 *البيان:* ${t.note}
+---------------
+📊 *صافي حسابك:*
+       ${totalText} ريال
+
+⭐ #يمن-ستلايت`;
+            const url = `https://wa.me/${clientMobile}?text=${encodeURIComponent(msg)}`;
+            window.open(url, "_blank");
+        };
+        groupDiv.appendChild(waBtn);
+
+        // زر SMS
+        const smsBtn = document.createElement("button");
+        smsBtn.className = "sms-btn";
+        smsBtn.textContent = "SMS";
+        smsBtn.onclick = e => {
+            e.stopPropagation();
+            const totalText = total >= 0 ? "عليك " + total : "لك " + Math.abs(total);
+            const typeText = t.type === "debit" ? "عليك" : "لك";
+            const msg = `الاخ: ${clientName}\nقيد ${typeText}: ${Math.abs(t.amount)} \nصافي حسابك: ${totalText}\n #يمن_ستلايت`;
+            const url = `sms:${clientMobile}?body=${encodeURIComponent(msg)}`;
+            window.open(url, "_blank");
+        };
+        groupDiv.appendChild(smsBtn);
+
+        waSmsCell.appendChild(groupDiv);
+    });
+}
+
+// ============================================================
+// إضافة عميل
+// ============================================================
+async function addClient() {
+    const name = qs("new_name").value.trim();
+    const mobile = qs("new_mobile").value.trim();
+    const username = qs("new_username").value.trim();
+    const password = qs("new_password").value.trim();
+    const msg = qs("clientMsg");
+    if(!name || !mobile || !username || !password){ msg.textContent="يرجى تعبئة كل الحقول"; msg.style.color="red"; return; }
+
+    msg.textContent = "جاري الإضافة...";
+    msg.style.color = "blue";
+
+    const res = await fetch(API, {
+        method: "POST",
+        body: JSON.stringify({ action: "addClient", name, mobile, username, password })
+    });
+    const data = await res.json();
+    if(data.status === "success"){
+        msg.textContent = "تمت الإضافة بنجاح";
+        msg.style.color = "green";
+        qs("new_name").value = "";
+        qs("new_mobile").value = "";
+        qs("new_username").value = "";
+        qs("new_password").value = "";
+        await initDashboard(true);
+        setTimeout(() => closeModal("addClientModal"), 600);
+    } else {
+        msg.textContent = "حدث خطأ أثناء الإضافة";
+        msg.style.color = "red";
+    }
+}
+
+// ============================================================
+// إضافة عملية مالية
+// ============================================================
+async function addTrans() {
+    const client_id = qs("client_select").value;
+    let amount = Number(qs("amount").value);
+    const type = qs("type").value;
+    const note = qs("note").value;
+    const msg = qs("msg");
+    const btn = qs("addTransBtn");
+
+    if(!client_id || !amount || !note){ msg.textContent="يرجى تعبئة كل الحقول"; msg.style.color="red"; return;}
+
+    btn.disabled = true;
+    msg.textContent = "جاري الحفظ...";
+    msg.style.color = "blue";
+
+    amount = type === "credit" ? -Math.abs(amount) : Math.abs(amount);
+    const res = await fetch(API, {
+        method: "POST",
+        body: JSON.stringify({ action: "addTransaction", client_id, amount, type, note })
+    });
+    const data = await res.json();
+
+    if(data.status === "success"){
+        msg.textContent = "تمت الإضافة بنجاح";
+        msg.style.color = "green";
+        qs("amount").value = "";
+        qs("note").value = "";
+        await initDashboard(true);
+        setTimeout(() => msg.textContent="", 2000);
+    } else {
+        msg.textContent = "حدث خطأ أثناء الإضافة";
+        msg.style.color = "red";
+    }
+    btn.disabled = false;
+}
+
+// ============================================================
+// تعديل وحذف العملية
+// ============================================================
+function openTransModal(id) {
+    currentTransId = id;
+    const t = allTransactions.find(x => String(x.trans_id) === String(id));
+    if(!t) return;
+    qs("modal_amount").value = Math.abs(t.amount);
+    qs("modal_type").value = t.type;
+    qs("modal_note").value = t.note;
+    openModal("transModal");
+}
+
+async function saveTransModal() {
+    if(!currentTransId) return;
+    let amount = Number(qs("modal_amount").value);
+    const type = qs("modal_type").value;
+    const note = qs("modal_note").value;
+    amount = type === "credit" ? -Math.abs(amount) : Math.abs(amount);
+
+    closeModal("transModal");
+    await fetch(API, {
+        method: "POST",
+        body: JSON.stringify({ action: "updateTransaction", trans_id: currentTransId, amount, type, note })
+    });
+    await initDashboard(true);
+}
+
+async function deleteTransModal() {
+    if(!confirm("هل تريد حذف العملية؟")) return;
+    closeModal("transModal");
+    await fetch(API, {
+        method: "POST",
+        body: JSON.stringify({ action: "deleteTransaction", trans_id: currentTransId })
+    });
+    await initDashboard(true);
+}
+
+// ============================================================
+// عرض جميع العملاء وصافي الحساب (لحظي 0ms من الذاكرة!)
+// ============================================================
+function showClientsBalances() {
+    renderBalancesModal(allBalances);
+    openModal("clientsModal");
+}
+
+function renderBalancesModal(balancesList) {
+    const data = [...balancesList].sort((a, b) => b.total - a.total);
+
+    let totalDebit = 0;   // عليه
+    let totalCredit = 0;  // له
+
+    data.forEach(c => {
+        if(c.total >= 0) totalDebit += c.total;
+        else totalCredit += Math.abs(c.total);
+    });
+
+    const diff = totalDebit - totalCredit;
+
+    const totalsDiv = qs("clientsTotals");
+    if(totalsDiv){
+        totalsDiv.innerHTML = `
+            <div><strong>إجمالي لك:</strong> ${totalDebit.toLocaleString()} ريال</div>
+            <div><strong>إجمالي عليك:</strong> ${totalCredit.toLocaleString()} ريال</div>
+            <div><strong>الفرق:</strong> 
+                <span style="color:${diff >= 0 ? 'red' : 'green'}">${diff >= 0 ? `لك ${diff.toLocaleString()}` : `عليك ${Math.abs(diff).toLocaleString()}`}</span>
+            </div>
+        `;
+    }
+
+    const tbody = document.querySelector("#clientsBalanceTable tbody"); 
+    tbody.innerHTML = "";
+
+    data.forEach(c => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${c.client_id}</td>
+            <td style="font-weight:bold">${c.name}</td>
+            <td>${c.mobile || "---"}</td>
+            <td style="font-weight:bold;color:${c.total>=0?'red':'green'}">
+                ${c.total>=0?`عليه ${c.total.toLocaleString()}`:`له ${Math.abs(c.total).toLocaleString()}`}
+            </td>
+            <td>
+                <button style="background:#EF4444;color:white;padding:4px 8px;border:none;border-radius:4px;cursor:pointer;">
+                    حذف
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+
+        tr.querySelector("button").addEventListener("click", () => deleteClient(c.client_id, c.name));
+    });
+}
+
+function filterClientsTable() {
+    const q = qs("search_client").value.toLowerCase();
+    document.querySelectorAll("#clientsBalanceTable tbody tr").forEach(r => {
+        const name = r.children[1].textContent.toLowerCase();
+        const mobile = r.children[2].textContent.toLowerCase();
+        r.style.display = (name.includes(q) || mobile.includes(q)) ? "" : "none";
+    });
+}
+
+// حذف العميل
+async function deleteClient(client_id, name) {
+    if(!confirm(`هل تريد حذف العميل "${name}" وكل عملياته؟`)) return;
+
+    const res = await fetch(API, {
+        method: "POST",
+        body: JSON.stringify({ action: "deleteClient", client_id })
+    });
+    const data = await res.json();
+    if(data.status === "success"){
+        alert("تم حذف العميل وكل عملياته بنجاح");
+        await initDashboard(true);
+        showClientsBalances();
+    } else {
+        alert("حدث خطأ أثناء الحذف");
+    }
+}
+
+// ============================================================
+// الطباعة
+// ============================================================
+function printTransactions() {
+    const clientTrans = allTransactions.filter(t => String(t.client_id) === String(currentClientId));
+    if (!clientTrans.length) return alert("لا توجد عمليات للطباعة");
+
+    const client = allClients.find(c => String(c.client_id) === String(currentClientId)) || {};
+    const clientName = client.name || "";
+    const total = clientTrans.reduce((s, x) => s + Number(x.amount), 0);
+
+    const companyName = "شركة يمن ستلايت";
+    const companyPhone = "738092209";
+    const logoUrl = "https://raw.githubusercontent.com/falahsab/daftar/refs/heads/main/img/%D8%AF%D9%81%D8%AA%D8%B1-%D9%8A%D9%85%D9%86-%D8%B3%D8%AA%D9%84%D8%A7%D9%8A%D8%AA-192.png";
+
+    const html = `
+    <html lang="ar" dir="rtl">
+    <head>
+        <meta charset="UTF-8">
+        <title>YemenSAT</title>
+        <style>
+            body { font-family: "Tajawal", sans-serif; direction: rtl; margin:20px; color:#0F172A; }
+            header { display:flex; justify-content: space-between; align-items:center; border-bottom: 2px solid #00693B; padding-bottom:10px; margin-bottom:20px; }
+            header img { height:60px; }
+            header .client-info { text-align: center; flex:1; }
+            header .client-info h2 { margin:0; color:#00693B; font-size:1.3em; }
+            header .client-info p { margin:0; font-size:0.95em; }
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            th, td { border: 1px solid #444; padding: 10px; text-align: center; }
+            th { background: #00A651; color: white; }
+            tbody tr:nth-child(even) { background-color: #f2f2f2; }
+            .debit { color: red; font-weight: bold; }
+            .credit { color: green; font-weight: bold; }
+            tfoot td { font-weight: bold; font-size: 1.05em; }
+            footer { margin-top: 40px; text-align: left; font-weight: bold; font-size:0.9em; }
+            @media print {
+                body { margin: 0; }
+                table { page-break-inside: auto; }
+                tr { page-break-inside: avoid; page-break-after: auto; }
+                thead { display: table-header-group; }
+                tfoot { display: table-footer-group; }
+                footer { position: fixed; bottom: 0; left: 20px; }
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            ${logoUrl ? `<img src="${logoUrl}" alt="Logo">` : '<div style="width:60px;"></div>'}
+            <div class="client-info">
+                <h2>تقرير عمليات العميل</h2>
+                <p>اسم العميل: ${clientName}</p>
+            </div>
+            <div style="width:60px;"></div>
+        </header>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>المبلغ</th>
+                    <th>النوع</th>
+                    <th>البيان</th>
+                    <th>التاريخ</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${clientTrans.map(t => {
+                    const date = new Date(t.date);
+                    const formattedDate = `${date.getDate()}/${date.getMonth()+1}/${date.getFullYear()}`;
+                    return `
+                        <tr>
+                            <td class="${t.type === "debit" ? "debit" : "credit"}">${Math.abs(t.amount).toLocaleString()}</td>
+                            <td>${t.type === "debit" ? "عليه" : "له"}</td>
+                            <td>${t.note}</td>
+                            <td>${formattedDate}</td>
+                        </tr>
+                    `;
+                }).join('')}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3" style="text-align: right;">صافي الحساب</td>
+                    <td style="color:${total >= 0 ? 'red' : 'green'};">
+                        ${total >= 0 ? `عليه ${total.toLocaleString()}` : `له ${Math.abs(total).toLocaleString()}`}
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <footer>${companyName} | ${companyPhone}</footer>
+    </body>
+    </html>
+    `;
+
+    const win = window.open("", "_blank");
+    win.document.write(html);
+    win.document.close();
+    win.focus();
+    setTimeout(() => win.print(), 500);
+}
+
+function printClientsList() {
+    const rows = Array.from(document.querySelectorAll("#clientsBalanceTable tbody tr"))
+                      .filter(r => r.style.display !== "none");
+
+    if (!rows.length) return alert("لا توجد بيانات للطباعة");
+
+    const companyName = "شركة يمن ستلايت";
+    const companyPhone = "738092209";
+    const logoUrl = "";
+
+    const html = `
+    <html lang="ar" dir="rtl">
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            body { font-family: "Tajawal", sans-serif; direction: rtl; margin:20px; color:#0F172A; }
+            header { display:flex; justify-content: space-between; align-items:center; border-bottom: 2px solid #00693B; padding-bottom:10px; margin-bottom:20px; }
+            header img { height:60px; }
+            header .report-info { text-align: center; flex:1; }
+            header .report-info h2 { margin:0; color:#00693B; font-size:1.3em; }
+            header .report-info p { margin:0; font-size:0.95em; }
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            th, td { border: 1px solid #444; padding: 10px; text-align: center; }
+            th { background: #00A651; color: white; }
+            tbody tr:nth-child(even) { background-color: #f2f2f2; }
+            tfoot td { font-weight: bold; font-size: 1.05em; }
+            footer { margin-top: 40px; text-align: left; font-weight: bold; font-size:0.9em; }
+            @media print {
+                body { margin: 0; }
+                table { page-break-inside: auto; }
+                tr { page-break-inside: avoid; page-break-after: auto; }
+                thead { display: table-header-group; }
+                tfoot { display: table-footer-group; }
+                footer { position: fixed; bottom: 0; left: 20px; }
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            ${logoUrl ? `<img src="${logoUrl}" alt="Logo">` : '<div style="width:60px;"></div>'}
+            <div class="report-info">
+                <h2>قائمة العملاء وصافي الحساب</h2>
+                <p>عدد العملاء: ${rows.length}</p>
+            </div>
+            <div style="width:60px;"></div>
+        </header>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>العميل</th>
+                    <th>الجوال</th>
+                    <th>صافي الحساب</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${rows.map(r => {
+                    const name = r.children[1].textContent;
+                    const mobile = r.children[2].textContent;
+                    const totalText = r.children[3].textContent.trim();
+                    const color = totalText.startsWith("عليه") ? "red" : "green";
+
+                    return `<tr>
+                                <td>${name}</td>
+                                <td>${mobile}</td>
+                                <td style="color:${color}; font-weight:bold;">${totalText}</td>
+                            </tr>`;
+                }).join('')}
+            </tbody>
+        </table>
+
+        <footer>${companyName} | ${companyPhone}</footer>
+    </body>
+    </html>
+    `;
+
+    const win = window.open("", "_blank");
+    win.document.title = " ";
+    win.document.write(html);
+    win.document.close();
+    win.focus();
+    setTimeout(() => win.print(), 500);
+}
+
+// ============================================================
+// جهات الاتصال (Contact Picker)
+// ============================================================
+function closePopup() {
+    qs("numberPopup").style.display = "none";
+}
+
+qs("pickContact").addEventListener("click", async () => {
+    if (!("contacts" in navigator && "select" in navigator.contacts)) {
+        alert("المتصفح لا يدعم اختيار جهات الاتصال");
+        return;
+    }
+
+    try {
+        const contacts = await navigator.contacts.select(["tel"], { multiple: false });
+        if (!contacts.length || !contacts[0].tel.length) return;
+
+        let numbers = contacts[0].tel.map(n => {
+            n = n.replace(/\s+/g, "").replace(/-/g, "").replace(/\(/g, "").replace(/\)/g, "");
+            if (n.startsWith("+967")) n = n.slice(4);
+            else if (n.startsWith("00967")) n = n.slice(5);
+            else if (n.startsWith("967")) n = n.slice(3);
+            n = n.replace(/^0/, "");
+            return n;
+        });
+
+        if (numbers.length === 1) {
+            qs("new_mobile").value = numbers[0];
+            return;
+        }
+
+        const listDiv = qs("numbersList");
+        listDiv.innerHTML = "";
+        numbers.forEach(num => {
+            let btn = document.createElement("button");
+            btn.textContent = num;
+            btn.style.cssText = "display:block;width:100%;margin:5px 0;padding:8px;border:none;background:#28a745;color:white;border-radius:6px;";
+            btn.addEventListener("click", () => {
+                qs("new_mobile").value = num;
+                closePopup();
+            });
+            listDiv.appendChild(btn);
+        });
+
+        qs("numberPopup").style.display = "block";
+    } catch(e) {}
+});
+
+// ============================================================
+// تهيئة الأحداث وبدء التشغيل
+// ============================================================
+qs("client_select").addEventListener("change", onClientSelected);
+
+// بدء التحميل الفوري
+initDashboard();
+</script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
