@@ -21,7 +21,7 @@ body { font-family: "Tajawal", sans-serif; background: var(--bg); margin:0; padd
 
 h2,h3{ margin:12px 0; color: var(--primary); }
 
-input, select, button { width: 100%; padding:12px; margin-top:10px; border:1px solid #d1d5db; border-radius:8px; font-size:1rem; box-sizing:border-box; }
+input, select, button { width: 100%; padding:12px; margin-top:6px; border:1px solid #d1d5db; border-radius:8px; font-size:1rem; box-sizing:border-box; }
 
 button { background: var(--primary); color:white; border:none; cursor:pointer; transition:0.3s; }
 button:hover { background: var(--secondary); }
@@ -116,7 +116,7 @@ if(localStorage.getItem("role")!=="admin"){ alert("يجب تسجيل الدخو�
 </select>
 
 <div style="display:flex;gap:8px;">
-    <button type="button" id="editCurrentClientBtn" onclick="openEditCurrentClient()" style="background:#0284c7;display:none;padding:6px;font-size:0.9rem;">✏️ تعديل بيانات العميل الحالي</button>
+    <button type="button" id="editCurrentClientBtn" onclick="openEditCurrentClient()" style="background:#0284c7;display:none;padding:8px;font-size:0.9rem;margin-top:6px;">✏️ تعديل بيانات العميل المختار</button>
 </div>
 
 <input id="amount" type="number" placeholder="المبلغ">
@@ -151,17 +151,29 @@ if(localStorage.getItem("role")!=="admin"){ alert("يجب تسجيل الدخو�
 <div id="addClientModal" class="modal">
   <div class="modal-content">
     <span class="close" onclick="closeModal('addClientModal')">&times;</span>
-    <h3>إضافة عميل جديد</h3>
-    <input id="new_name" placeholder="الاسم">
+    <h3 style="color:#00693B;margin-top:0;">إضافة عميل جديد</h3>
+    
+    <label style="display:block;margin-top:8px;font-size:0.9rem;font-weight:bold;color:#333;">الاسم:</label>
+    <input id="new_name" placeholder="أدخل اسم العميل">
+    
+    <label style="display:block;margin-top:8px;font-size:0.9rem;font-weight:bold;color:#333;">رقم الجوال:</label>
     <div class="input-group">
         <input id="new_mobile" type="tel" placeholder="رقم الجوال">
-        <button class="pick-btn" id="pickContact">📱</button>
+        <button class="pick-btn" id="pickContact" type="button">📱</button>
     </div>
+    
+    <label style="display:block;margin-top:8px;font-size:0.9rem;font-weight:bold;color:#333;">اسم المستخدم (للتطبيق):</label>
     <input id="new_username" placeholder="اسم المستخدم">
-    <input id="new_password" type="password" placeholder="كلمة المرور">
-    <input id="new_mango_user" placeholder="حساب مانجو (mango_user)">
-    <button onclick="addClient()">إضافة العميل</button>
-    <p id="clientMsg"></p>
+    
+    <label style="display:block;margin-top:8px;font-size:0.9rem;font-weight:bold;color:#333;">كلمة المرور:</label>
+    <input id="new_password" type="text" placeholder="كلمة المرور">
+    
+    <!-- حقل حساب مانجو المميز -->
+    <label style="display:block;margin-top:8px;font-size:0.9rem;font-weight:bold;color:#00693B;">حساب مانجو (mango_user):</label>
+    <input id="new_mango_user" placeholder="أدخل اسم المستخدم في مانجو" style="border:2px solid #00A651;background:#f0fdf4;">
+    
+    <button onclick="addClient()" style="margin-top:15px;background:#00693B;font-weight:bold;">إضافة العميل</button>
+    <p id="clientMsg" style="text-align:center;font-weight:bold;margin-top:8px;"></p>
   </div>
 </div>
 
@@ -169,26 +181,26 @@ if(localStorage.getItem("role")!=="admin"){ alert("يجب تسجيل الدخو�
 <div id="editClientModal" class="modal">
   <div class="modal-content">
     <span class="close" onclick="closeModal('editClientModal')">&times;</span>
-    <h3>تعديل بيانات العميل</h3>
+    <h3 style="color:#0284c7;margin-top:0;">تعديل بيانات العميل</h3>
     <input id="edit_client_id" type="hidden">
     
-    <label style="font-size:0.85rem;color:#555;font-weight:bold;">الاسم:</label>
+    <label style="display:block;margin-top:8px;font-size:0.9rem;font-weight:bold;color:#333;">الاسم:</label>
     <input id="edit_name" placeholder="الاسم">
     
-    <label style="font-size:0.85rem;color:#555;font-weight:bold;">رقم الجوال:</label>
+    <label style="display:block;margin-top:8px;font-size:0.9rem;font-weight:bold;color:#333;">رقم الجوال:</label>
     <input id="edit_mobile" type="tel" placeholder="رقم الجوال">
     
-    <label style="font-size:0.85rem;color:#555;font-weight:bold;">اسم المستخدم:</label>
+    <label style="display:block;margin-top:8px;font-size:0.9rem;font-weight:bold;color:#333;">اسم المستخدم:</label>
     <input id="edit_username" placeholder="اسم المستخدم">
     
-    <label style="font-size:0.85rem;color:#555;font-weight:bold;">كلمة المرور:</label>
+    <label style="display:block;margin-top:8px;font-size:0.9rem;font-weight:bold;color:#333;">كلمة المرور:</label>
     <input id="edit_password" type="text" placeholder="كلمة المرور">
     
-    <label style="font-size:0.85rem;color:#555;font-weight:bold;">حساب مانجو (mango_user):</label>
-    <input id="edit_mango_user" placeholder="حساب مانجو (mango_user)">
+    <label style="display:block;margin-top:8px;font-size:0.9rem;font-weight:bold;color:#00693B;">حساب مانجو (mango_user):</label>
+    <input id="edit_mango_user" placeholder="حساب مانجو (mango_user)" style="border:2px solid #00A651;background:#f0fdf4;">
     
     <button onclick="saveClientModal()" style="margin-top:15px;background:#0284c7;">حفظ التعديلات</button>
-    <p id="editClientMsg"></p>
+    <p id="editClientMsg" style="text-align:center;font-weight:bold;margin-top:8px;"></p>
   </div>
 </div>
 
@@ -264,15 +276,44 @@ let currentTransId = null;
 let isSyncing = false;
 let lastSyncTime = 0;
 
-function openModal(id){ qs(id).style.display = "flex"; }
+function openModal(id){ 
+    ensureMangoFields(); // التحقق التلقائي من ظهور حقول مانجو
+    qs(id).style.display = "flex"; 
+}
 function closeModal(id){ qs(id).style.display = "none"; }
 window.onclick = e => { if(e.target.classList.contains("modal")) e.target.style.display = "none"; };
 function logout(){ localStorage.clear(); window.location.href = "index.html"; }
 
 // ============================================================
+// حماية برمجية: إجبار ظهور حقل حساب مانجو تلقائياً حتى لو كان الملف قديماً!
+// ============================================================
+function ensureMangoFields() {
+    // 1. فحص مودال الإضافة
+    if (!document.getElementById("new_mango_user")) {
+        const modal = document.querySelector("#addClientModal .modal-content");
+        if (modal) {
+            const btn = modal.querySelector("button[onclick='addClient()']");
+            const lbl = document.createElement("label");
+            lbl.style.cssText = "display:block;margin-top:8px;font-size:0.9rem;font-weight:bold;color:#00693B;";
+            lbl.textContent = "حساب مانجو (mango_user):";
+
+            const inp = document.createElement("input");
+            inp.id = "new_mango_user";
+            inp.placeholder = "أدخل اسم المستخدم في مانجو";
+            inp.style.cssText = "border:2px solid #00A651;background:#f0fdf4;width:100%;padding:12px;margin-top:6px;border-radius:8px;box-sizing:border-box;";
+
+            modal.insertBefore(lbl, btn);
+            modal.insertBefore(inp, btn);
+        }
+    }
+}
+
+// ============================================================
 // 1. التشغيل والتحميل اللحظي
 // ============================================================
 document.addEventListener("DOMContentLoaded", () => {
+    ensureMangoFields();
+
     const cached = localStorage.getItem("yemen_sat_cache_v5");
     if (cached) {
         try {
@@ -331,7 +372,7 @@ function renderDashboard(data) {
     allClients.forEach(c => {
         const op = document.createElement("option");
         op.value = c.client_id;
-        const mangoTag = c.mango_user ? ` [${c.mango_user}]` : "";
+        const mangoTag = c.mango_user ? ` [مانجو: ${c.mango_user}]` : "";
         op.textContent = `${c.name} (${c.mobile || "بدون جوال"})${mangoTag}`;
         select.appendChild(op);
     });
@@ -406,7 +447,8 @@ async function addClient() {
     const mobile = qs("new_mobile").value.trim();
     const username = qs("new_username").value.trim();
     const password = qs("new_password").value.trim();
-    const mango_user = qs("new_mango_user").value.trim();
+    const mangoInput = qs("new_mango_user");
+    const mango_user = mangoInput ? mangoInput.value.trim() : "";
     const msg = qs("clientMsg");
 
     if(!name || !mobile || !username || !password){ 
@@ -426,15 +468,15 @@ async function addClient() {
         });
         const data = await res.json();
         if(data.status === "success"){
-            msg.textContent = "تمت الإضافة بنجاح";
+            msg.textContent = "تمت الإضافة بنجاح ✔";
             msg.style.color = "green";
             qs("new_name").value = "";
             qs("new_mobile").value = "";
             qs("new_username").value = "";
             qs("new_password").value = "";
-            qs("new_mango_user").value = "";
+            if (mangoInput) mangoInput.value = "";
             await syncData(false, true);
-            setTimeout(() => closeModal("addClientModal"), 600);
+            setTimeout(() => closeModal("addClientModal"), 700);
         } else {
             msg.textContent = "حدث خطأ أثناء الإضافة";
             msg.style.color = "red";
@@ -445,7 +487,6 @@ async function addClient() {
     }
 }
 
-// فتح مودال تعديل العميل
 function openEditCurrentClient() {
     if (!currentClientId) return;
     openEditClientModal(currentClientId);
@@ -460,7 +501,7 @@ function openEditClientModal(clientId) {
     qs("edit_mobile").value = client.mobile || "";
     qs("edit_username").value = client.username || "";
     qs("edit_password").value = client.password || "";
-    qs("edit_mango_user").value = client.mango_user || "";
+    if (qs("edit_mango_user")) qs("edit_mango_user").value = client.mango_user || "";
     qs("editClientMsg").textContent = "";
 
     openModal("editClientModal");
@@ -472,7 +513,8 @@ async function saveClientModal() {
     const mobile = qs("edit_mobile").value.trim();
     const username = qs("edit_username").value.trim();
     const password = qs("edit_password").value.trim();
-    const mango_user = qs("edit_mango_user").value.trim();
+    const mangoInput = qs("edit_mango_user");
+    const mango_user = mangoInput ? mangoInput.value.trim() : "";
     const msg = qs("editClientMsg");
 
     if (!name || !client_id) {
@@ -697,7 +739,7 @@ async function deleteTransModal() {
 }
 
 // ============================================================
-// 5. قائمة العملاء (مع إمكانية التعديل وحساب مانجو)
+// 5. قائمة العملاء
 // ============================================================
 function showClientsBalances() {
     renderBalancesModal(allBalances);
