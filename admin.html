@@ -44,13 +44,13 @@ th { background: var(--secondary); color:white; }
 
 .modal { display:none; position:fixed; z-index:200; left:0; top:0; width:100%; height:100%; background-color:rgba(0,0,0,0.4); justify-content:center; align-items:center; }
 
-.modal-content { background:#fff; margin:auto; padding:20px; border-radius:10px; width:90%; max-width:420px; animation:fadeIn 0.25s ease; }
+.modal-content { background:#fff; margin:auto; padding:20px; border-radius:10px; width:90%; max-width:440px; animation:fadeIn 0.25s ease; max-height:90vh; overflow-y:auto; }
 @keyframes fadeIn { from{ opacity:0; transform:scale(.9); } to{ opacity:1; } }
 
 .close { color:#555; font-size:28px; cursor:pointer; float:left; }
 .close:hover{ color:#000; }
 
-#clientsModal .modal-body { background:#fff; padding:18px; border-radius:10px; width:90%; max-width:900px; max-height:80vh; overflow:auto; }
+#clientsModal .modal-body { background:#fff; padding:18px; border-radius:10px; width:90%; max-width:920px; max-height:85vh; overflow:auto; }
 
 .stat-box { background:white; padding:15px; border-radius:10px; box-shadow:0 2px 5px #0001; text-align:center; flex:1; font-weight:bold; }
 
@@ -115,6 +115,10 @@ if(localStorage.getItem("role")!=="admin"){ alert("يجب تسجيل الدخو�
     <option value="">اختر العميل</option>
 </select>
 
+<div style="display:flex;gap:8px;">
+    <button type="button" id="editCurrentClientBtn" onclick="openEditCurrentClient()" style="background:#0284c7;display:none;padding:6px;font-size:0.9rem;">✏️ تعديل بيانات العميل الحالي</button>
+</div>
+
 <input id="amount" type="number" placeholder="المبلغ">
 <select id="type">
     <option value="debit">عليه</option>
@@ -143,7 +147,7 @@ if(localStorage.getItem("role")!=="admin"){ alert("يجب تسجيل الدخو�
 
 </div>
 
-<!-- مودال إضافة العميل -->
+<!-- مودال إضافة العميل (مع mango_user) -->
 <div id="addClientModal" class="modal">
   <div class="modal-content">
     <span class="close" onclick="closeModal('addClientModal')">&times;</span>
@@ -155,8 +159,36 @@ if(localStorage.getItem("role")!=="admin"){ alert("يجب تسجيل الدخو�
     </div>
     <input id="new_username" placeholder="اسم المستخدم">
     <input id="new_password" type="password" placeholder="كلمة المرور">
+    <input id="new_mango_user" placeholder="حساب مانجو (mango_user)">
     <button onclick="addClient()">إضافة العميل</button>
     <p id="clientMsg"></p>
+  </div>
+</div>
+
+<!-- مودال تعديل بيانات العميل (مع mango_user) -->
+<div id="editClientModal" class="modal">
+  <div class="modal-content">
+    <span class="close" onclick="closeModal('editClientModal')">&times;</span>
+    <h3>تعديل بيانات العميل</h3>
+    <input id="edit_client_id" type="hidden">
+    
+    <label style="font-size:0.85rem;color:#555;font-weight:bold;">الاسم:</label>
+    <input id="edit_name" placeholder="الاسم">
+    
+    <label style="font-size:0.85rem;color:#555;font-weight:bold;">رقم الجوال:</label>
+    <input id="edit_mobile" type="tel" placeholder="رقم الجوال">
+    
+    <label style="font-size:0.85rem;color:#555;font-weight:bold;">اسم المستخدم:</label>
+    <input id="edit_username" placeholder="اسم المستخدم">
+    
+    <label style="font-size:0.85rem;color:#555;font-weight:bold;">كلمة المرور:</label>
+    <input id="edit_password" type="text" placeholder="كلمة المرور">
+    
+    <label style="font-size:0.85rem;color:#555;font-weight:bold;">حساب مانجو (mango_user):</label>
+    <input id="edit_mango_user" placeholder="حساب مانجو (mango_user)">
+    
+    <button onclick="saveClientModal()" style="margin-top:15px;background:#0284c7;">حفظ التعديلات</button>
+    <p id="editClientMsg"></p>
   </div>
 </div>
 
@@ -179,14 +211,14 @@ if(localStorage.getItem("role")!=="admin"){ alert("يجب تسجيل الدخو�
   </div>
 </div>
 
-<!-- مودال العملاء -->
+<!-- مودال قائمة العملاء -->
 <div id="clientsModal" class="modal">
   <div class="modal-body"> 
       <div style="display:flex;justify-content:space-between">
         <h3>قائمة العملاء وصافي الحساب</h3>
         <button class="close-btn" onclick="closeModal('clientsModal')" style="background:#EF4444;padding:6px 12px">إغلاق</button>
       </div>
-      <input id="search_client" placeholder="ابحث بالاسم أو رقم الجوال" oninput="filterClientsTable()" style="margin-top:10px;margin-bottom: 10px">
+      <input id="search_client" placeholder="ابحث بالاسم أو رقم الجوال أو حساب مانجو" oninput="filterClientsTable()" style="margin-top:10px;margin-bottom: 10px">
       
       <table id="clientsBalanceTable">
         <thead>
@@ -194,6 +226,7 @@ if(localStorage.getItem("role")!=="admin"){ alert("يجب تسجيل الدخو�
                 <th>ID</th>
                 <th>العميل</th>
                 <th>الجوال</th>
+                <th>مانجو</th>
                 <th>صافي الحساب</th>
                 <th>إجراءات</th>
             </tr>
@@ -216,7 +249,7 @@ if(localStorage.getItem("role")!=="admin"){ alert("يجب تسجيل الدخو�
 </div>
 
 <script>
-const API = "https://script.google.com/macros/s/AKfycbydO8RtmMKGTl5TSZp15MBkgS1oHq5BrNEOD5cUTcXv-j5NaeH0iPJBbaQotitSKZuv/exec";
+const API = "https://script.google.com/macros/s/AKfycbyd3OXuJgmM8FiqT1Y2uOvgtqMETPmCa9PewfRbW5o6hrgXw2YITQLJU7B2wjSfJZB8/exec";
 const waIcon = "https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg";
 
 const qs = id => document.getElementById(id);
@@ -228,7 +261,6 @@ let currentDisplayedTrans = [];
 let currentClientId = "";
 let currentTransId = null;
 
-// قفل ضد إغراق السيرفر بالطلبات المتزامنة
 let isSyncing = false;
 let lastSyncTime = 0;
 
@@ -238,10 +270,9 @@ window.onclick = e => { if(e.target.classList.contains("modal")) e.target.style.
 function logout(){ localStorage.clear(); window.location.href = "index.html"; }
 
 // ============================================================
-// 1. التشغيل الفوري والتحميل المستقر (0ms)
+// 1. التشغيل والتحميل اللحظي
 // ============================================================
 document.addEventListener("DOMContentLoaded", () => {
-    // قراءة البيانات من الكاش المحلي وعرضها فوراً (0 ثانية)
     const cached = localStorage.getItem("yemen_sat_cache_v5");
     if (cached) {
         try {
@@ -249,17 +280,15 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch(e){}
     }
 
-    // مزامنة في الخلفية بهدوء بعد ثانية واحدة لمنع تداخل تشغيل المتصفح
     setTimeout(() => {
         syncData(!cached, false);
-    }, 800);
+    }, 600);
 });
 
 async function syncData(showIndicator = true, force = false) {
-    // منع الطلبات المتزامنة المتكررة (قفل ذكي)
     const now = Date.now();
     if (isSyncing) return;
-    if (!force && (now - lastSyncTime < 15000)) return; // لا تكرر الطلب إلا كل 15 ثانية على الأقل
+    if (!force && (now - lastSyncTime < 15000)) return;
 
     isSyncing = true;
     if (showIndicator) qs("loading").textContent = "جاري التحديث...";
@@ -290,15 +319,11 @@ async function syncData(showIndicator = true, force = false) {
     }
 }
 
-// ============================================================
-// دالة العرض مع الحساب الذاتي الفوري للإجماليات (مستحيل تتأخر!)
-// ============================================================
 function renderDashboard(data) {
     allClients = data.clients || [];
     allBalances = data.balances || [];
     clientRecentMap = data.recentMap || {};
 
-    // 1. تعبئة القائمة المنسدلة
     const select = qs("client_select");
     const currentVal = select.value;
     select.innerHTML = `<option value="">اختر العميل</option>`;
@@ -306,7 +331,8 @@ function renderDashboard(data) {
     allClients.forEach(c => {
         const op = document.createElement("option");
         op.value = c.client_id;
-        op.textContent = `${c.name} (${c.mobile || "بدون جوال"})`;
+        const mangoTag = c.mango_user ? ` [${c.mango_user}]` : "";
+        op.textContent = `${c.name} (${c.mobile || "بدون جوال"})${mangoTag}`;
         select.appendChild(op);
     });
 
@@ -314,7 +340,6 @@ function renderDashboard(data) {
         select.value = currentVal;
     }
 
-    // 2. حساب الإجماليات محلياً فوراً (0ms) لضمان ظهورها بدون أي انتظار!
     qs("stat_clients").textContent = `👥 العملاء: ${allClients.length}`;
 
     let totalDebit = 0;
@@ -338,26 +363,29 @@ function renderDashboard(data) {
         qs("stat_last").textContent = "جاهز";
     }
 
-    // تحديث العميل المختار إن وجد
     if (select.value) {
         onClientChange();
     }
 }
 
 // ============================================================
-// 2. اختيار العميل اللحظي (0 ثانية وبدون أي طلب سيرفر نهائياً!)
+// 2. اختيار العميل
 // ============================================================
 qs("client_select").addEventListener("change", onClientChange);
 
 function onClientChange() {
     currentClientId = qs("client_select").value;
+    const editBtn = qs("editCurrentClientBtn");
+
     if (!currentClientId) {
         qs("total_info").textContent = "";
         qs("transTable").innerHTML = "";
+        if (editBtn) editBtn.style.display = "none";
         return;
     }
 
-    // احتساب رصيد العميل فوراً من الذاكرة المحلية
+    if (editBtn) editBtn.style.display = "block";
+
     const balObj = allBalances.find(b => String(b.client_id) === String(currentClientId));
     const total = balObj ? balObj.total : 0;
 
@@ -365,13 +393,176 @@ function onClientChange() {
         ? `<b style="color:red;font-size:1.1rem;">إجمالي الرصيد: عليه ${total.toLocaleString()} ريال</b>`
         : `<b style="color:green;font-size:1.1rem;">إجمالي الرصيد: له ${Math.abs(total).toLocaleString()} ريال</b>`;
 
-    // عرض العمليات الثلاث الأخيرة فوراً في 0 ثانية
     const recent = clientRecentMap[String(currentClientId)] || [];
     currentDisplayedTrans = recent;
     renderTransactions(recent);
 }
 
-// جلب كافة العمليات للعميل عند الطلب فقط
+// ============================================================
+// 3. إضافة وتعديل العميل (مع mango_user)
+// ============================================================
+async function addClient() {
+    const name = qs("new_name").value.trim();
+    const mobile = qs("new_mobile").value.trim();
+    const username = qs("new_username").value.trim();
+    const password = qs("new_password").value.trim();
+    const mango_user = qs("new_mango_user").value.trim();
+    const msg = qs("clientMsg");
+
+    if(!name || !mobile || !username || !password){ 
+        msg.textContent = "يرجى تعبئة الحقول الأساسية"; 
+        msg.style.color = "red"; 
+        return; 
+    }
+
+    msg.textContent = "جاري الإضافة...";
+    msg.style.color = "blue";
+
+    try {
+        const res = await fetch(API, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ action: "addClient", name, mobile, username, password, mango_user })
+        });
+        const data = await res.json();
+        if(data.status === "success"){
+            msg.textContent = "تمت الإضافة بنجاح";
+            msg.style.color = "green";
+            qs("new_name").value = "";
+            qs("new_mobile").value = "";
+            qs("new_username").value = "";
+            qs("new_password").value = "";
+            qs("new_mango_user").value = "";
+            await syncData(false, true);
+            setTimeout(() => closeModal("addClientModal"), 600);
+        } else {
+            msg.textContent = "حدث خطأ أثناء الإضافة";
+            msg.style.color = "red";
+        }
+    } catch(e) {
+        msg.textContent = "خطأ في الاتصال";
+        msg.style.color = "red";
+    }
+}
+
+// فتح مودال تعديل العميل
+function openEditCurrentClient() {
+    if (!currentClientId) return;
+    openEditClientModal(currentClientId);
+}
+
+function openEditClientModal(clientId) {
+    const client = allClients.find(c => String(c.client_id) === String(clientId));
+    if (!client) return alert("العميل غير موجود");
+
+    qs("edit_client_id").value = client.client_id;
+    qs("edit_name").value = client.name || "";
+    qs("edit_mobile").value = client.mobile || "";
+    qs("edit_username").value = client.username || "";
+    qs("edit_password").value = client.password || "";
+    qs("edit_mango_user").value = client.mango_user || "";
+    qs("editClientMsg").textContent = "";
+
+    openModal("editClientModal");
+}
+
+async function saveClientModal() {
+    const client_id = qs("edit_client_id").value;
+    const name = qs("edit_name").value.trim();
+    const mobile = qs("edit_mobile").value.trim();
+    const username = qs("edit_username").value.trim();
+    const password = qs("edit_password").value.trim();
+    const mango_user = qs("edit_mango_user").value.trim();
+    const msg = qs("editClientMsg");
+
+    if (!name || !client_id) {
+        msg.textContent = "الاسم مطلوب";
+        msg.style.color = "red";
+        return;
+    }
+
+    msg.textContent = "جاري حفظ التعديلات...";
+    msg.style.color = "blue";
+
+    try {
+        const res = await fetch(API, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({
+                action: "updateClient",
+                client_id,
+                name,
+                mobile,
+                username,
+                password,
+                mango_user
+            })
+        });
+
+        const data = await res.json();
+        if (data.status === "success") {
+            msg.textContent = "تم التعديل بنجاح ✔";
+            msg.style.color = "green";
+            await syncData(false, true);
+            showClientsBalances();
+            setTimeout(() => closeModal("editClientModal"), 800);
+        } else {
+            msg.textContent = data.message || "تعذر التعديل";
+            msg.style.color = "red";
+        }
+    } catch (e) {
+        msg.textContent = "خطأ في الاتصال بالسيرفر";
+        msg.style.color = "red";
+    }
+}
+
+// ============================================================
+// 4. العمليات المالية
+// ============================================================
+async function addTrans() {
+    const client_id = qs("client_select").value;
+    let amount = Number(qs("amount").value);
+    const type = qs("type").value;
+    const note = qs("note").value;
+    const msg = qs("msg");
+    const btn = qs("addTransBtn");
+
+    if(!client_id || !amount || !note){ msg.textContent="يرجى تعبئة كل الحقول"; msg.style.color="red"; return;}
+
+    btn.disabled = true;
+    msg.textContent = "جاري الحفظ...";
+    msg.style.color = "blue";
+
+    amount = type === "credit" ? -Math.abs(amount) : Math.abs(amount);
+
+    try {
+        const res = await fetch(API, {
+            method: "POST",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify({ action: "addTransaction", client_id, amount, type, note })
+        });
+        const data = await res.json();
+
+        if(data.status === "success"){
+            msg.textContent = "تمت الإضافة بنجاح";
+            msg.style.color = "green";
+            qs("amount").value = "";
+            qs("note").value = "";
+            await syncData(false, true);
+            onClientChange();
+            setTimeout(() => msg.textContent="", 2000);
+        } else {
+            msg.textContent = "حدث خطأ أثناء الإضافة";
+            msg.style.color = "red";
+        }
+    } catch(e) {
+        msg.textContent = "خطأ في الاتصال بالسيرفر";
+        msg.style.color = "red";
+    } finally {
+        btn.disabled = false;
+    }
+}
+
 async function showAllTransactions() {
     if (!currentClientId) return alert("يرجى اختيار العميل أولاً");
     
@@ -427,7 +618,6 @@ function renderTransactions(transactions) {
             if (i === 0) td.className = t.type === "debit" ? "debit" : "credit";
         });
 
-        // أزرار واتساب و SMS
         const waSmsCell = row.insertCell();
         const groupDiv = document.createElement("div");
         groupDiv.className = "wa-sms-group";
@@ -465,90 +655,6 @@ function renderTransactions(transactions) {
 
         waSmsCell.appendChild(groupDiv);
     });
-}
-
-// ============================================================
-// 3. إضافة وتعديل العمليات والعملاء
-// ============================================================
-async function addTrans() {
-    const client_id = qs("client_select").value;
-    let amount = Number(qs("amount").value);
-    const type = qs("type").value;
-    const note = qs("note").value;
-    const msg = qs("msg");
-    const btn = qs("addTransBtn");
-
-    if(!client_id || !amount || !note){ msg.textContent="يرجى تعبئة كل الحقول"; msg.style.color="red"; return;}
-
-    btn.disabled = true;
-    msg.textContent = "جاري الحفظ...";
-    msg.style.color = "blue";
-
-    amount = type === "credit" ? -Math.abs(amount) : Math.abs(amount);
-
-    try {
-        const res = await fetch(API, {
-            method: "POST",
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({ action: "addTransaction", client_id, amount, type, note })
-        });
-        const data = await res.json();
-
-        if(data.status === "success"){
-            msg.textContent = "تمت الإضافة بنجاح";
-            msg.style.color = "green";
-            qs("amount").value = "";
-            qs("note").value = "";
-            await syncData(false, true);
-            onClientChange();
-            setTimeout(() => msg.textContent="", 2000);
-        } else {
-            msg.textContent = "حدث خطأ أثناء الإضافة";
-            msg.style.color = "red";
-        }
-    } catch(e) {
-        msg.textContent = "خطأ في الاتصال بالسيرفر";
-        msg.style.color = "red";
-    } finally {
-        btn.disabled = false;
-    }
-}
-
-async function addClient() {
-    const name = qs("new_name").value.trim();
-    const mobile = qs("new_mobile").value.trim();
-    const username = qs("new_username").value.trim();
-    const password = qs("new_password").value.trim();
-    const msg = qs("clientMsg");
-    if(!name || !mobile || !username || !password){ msg.textContent="يرجى تعبئة كل الحقول"; msg.style.color="red"; return; }
-
-    msg.textContent = "جاري الإضافة...";
-    msg.style.color = "blue";
-
-    try {
-        const res = await fetch(API, {
-            method: "POST",
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify({ action: "addClient", name, mobile, username, password })
-        });
-        const data = await res.json();
-        if(data.status === "success"){
-            msg.textContent = "تمت الإضافة بنجاح";
-            msg.style.color = "green";
-            qs("new_name").value = "";
-            qs("new_mobile").value = "";
-            qs("new_username").value = "";
-            qs("new_password").value = "";
-            await syncData(false, true);
-            setTimeout(() => closeModal("addClientModal"), 600);
-        } else {
-            msg.textContent = "حدث خطأ أثناء الإضافة";
-            msg.style.color = "red";
-        }
-    } catch(e) {
-        msg.textContent = "خطأ في الاتصال";
-        msg.style.color = "red";
-    }
 }
 
 function openTransModal(id) {
@@ -591,7 +697,7 @@ async function deleteTransModal() {
 }
 
 // ============================================================
-// 4. عرض قائمة العملاء وصافي الحسابات اللحظي (0 ثانية!)
+// 5. قائمة العملاء (مع إمكانية التعديل وحساب مانجو)
 // ============================================================
 function showClientsBalances() {
     renderBalancesModal(allBalances);
@@ -631,18 +737,23 @@ function renderBalancesModal(balancesList) {
             <td>${c.client_id}</td>
             <td style="font-weight:bold">${c.name}</td>
             <td>${c.mobile || "---"}</td>
+            <td style="color:#0284c7;font-weight:bold;">${c.mango_user || "---"}</td>
             <td style="font-weight:bold;color:${c.total>=0?'red':'green'}">
                 ${c.total>=0?`عليه ${c.total.toLocaleString()}`:`له ${Math.abs(c.total).toLocaleString()}`}
             </td>
             <td>
-                <button style="background:#EF4444;color:white;padding:4px 8px;border:none;border-radius:4px;cursor:pointer;">
+                <button class="edit-btn" style="background:#0284c7;color:white;padding:4px 8px;border:none;border-radius:4px;cursor:pointer;margin-left:4px;">
+                    تعديل
+                </button>
+                <button class="del-btn" style="background:#EF4444;color:white;padding:4px 8px;border:none;border-radius:4px;cursor:pointer;">
                     حذف
                 </button>
             </td>
         `;
         tbody.appendChild(tr);
 
-        tr.querySelector("button").addEventListener("click", () => deleteClient(c.client_id, c.name));
+        tr.querySelector(".edit-btn").addEventListener("click", () => openEditClientModal(c.client_id));
+        tr.querySelector(".del-btn").addEventListener("click", () => deleteClient(c.client_id, c.name));
     });
 }
 
@@ -651,7 +762,8 @@ function filterClientsTable() {
     document.querySelectorAll("#clientsBalanceTable tbody tr").forEach(r => {
         const name = r.children[1].textContent.toLowerCase();
         const mobile = r.children[2].textContent.toLowerCase();
-        r.style.display = (name.includes(q) || mobile.includes(q)) ? "" : "none";
+        const mango = r.children[3].textContent.toLowerCase();
+        r.style.display = (name.includes(q) || mobile.includes(q) || mango.includes(q)) ? "" : "none";
     });
 }
 
@@ -674,7 +786,7 @@ async function deleteClient(client_id, name) {
 }
 
 // ============================================================
-// 5. الطباعة
+// 6. الطباعة
 // ============================================================
 function printTransactions() {
     if (!currentDisplayedTrans.length) return alert("لا توجد عمليات للطباعة");
@@ -822,6 +934,7 @@ function printClientsList() {
                 <tr>
                     <th>العميل</th>
                     <th>الجوال</th>
+                    <th>حساب مانجو</th>
                     <th>صافي الحساب</th>
                 </tr>
             </thead>
@@ -829,12 +942,14 @@ function printClientsList() {
                 ${rows.map(r => {
                     const name = r.children[1].textContent;
                     const mobile = r.children[2].textContent;
-                    const totalText = r.children[3].textContent.trim();
+                    const mango = r.children[3].textContent;
+                    const totalText = r.children[4].textContent.trim();
                     const color = totalText.startsWith("عليه") ? "red" : "green";
 
                     return `<tr>
                                 <td>${name}</td>
                                 <td>${mobile}</td>
+                                <td>${mango}</td>
                                 <td style="color:${color}; font-weight:bold;">${totalText}</td>
                             </tr>`;
                 }).join('')}
@@ -855,7 +970,7 @@ function printClientsList() {
 }
 
 // ============================================================
-// 6. جهات الاتصال (Contact Picker)
+// 7. جهات الاتصال (Contact Picker)
 // ============================================================
 function closePopup() { qs("numberPopup").style.display = "none"; }
 
